@@ -1,0 +1,7 @@
+tmp/
+dist/
+node_modules/
+
+# Cocalc
+*.term
+*.sage-chat
