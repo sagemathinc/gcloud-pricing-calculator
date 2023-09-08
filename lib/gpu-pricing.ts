@@ -63,7 +63,7 @@ export async function parseGpuData(body: string) {
 
   // The pricing on the website is just totally wrong and massively better than reality (?).
   // At least I can reset it to something that agrees with the cloud console as of Sept 2024.
-  data["NVIDIA K80"] = {
+  data["NVIDIA K80"]["spot"] = {
     "us-central1": "0.19",
     "us-west1": "0.19",
     "us-east1": "0.19",

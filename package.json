@@ -2,9 +2,7 @@
   "name": "@cocalc/gcloud-pricing-calculator",
   "version": "0.1.0",
   "description": "Google Cloud Pricing Calculator in Javascript",
-  "exports": {
-    "./*": "./dist/lib/*.js"
-  },
+  "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepublishOnly": "pnpm audit && pnpm test-all",
