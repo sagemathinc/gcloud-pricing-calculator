@@ -76,6 +76,7 @@ We parse this into an object of the form:
 */
 
 import cheerio from "cheerio";
+import { fetchGpuData, parseGpuData } from "./gpu-pricing";
 
 export async function fetchPricingData() {
   const gcloudUrl = "https://cloud.google.com/compute/all-pricing";
@@ -91,51 +92,132 @@ export async function fetchPricingData() {
 export async function parsePricingData(body: string) {
   // Use cheerio to load the HTML
   const $ = cheerio.load(body);
-  const structure: any = {};
+  const tables: any[] = [];
 
-  for (const element of $("h2[data-text]")) {
-    const type = $(element).attr("id");
-    if (!type) {
-      continue;
-    }
-    structure[type] = {};
-
-    // Find the subsequent h4 elements, until the next h2
-    let heading = "h4";
-    let sections = $(element).nextUntil("h2", "h4[data-text]");
-
-    if (sections.length == 0) {
-      sections = $(element).nextUntil("h2", "h3[data-text]");
-      heading = "h3";
-    }
-    for (const subElement of sections) {
-      const subType = $(subElement).attr("id");
-      if (!subType) {
+  for (const x of $("cloudx-pricing-table")) {
+    const data = $(x);
+    const tableLayout = data.attr("layout");
+    if (!tableLayout) continue;
+    const json = tableLayout
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/'/g, '"');
+    const layout = JSON.parse(json);
+    if (layout?.rows) {
+      const type = data.prev().attr("id");
+      if (!type) continue;
+      if (
+        type.includes("image") ||
+        type.includes("disk") ||
+        type.includes("localssd")
+      ) {
+        // These are templated in some mysterious way so the data isn't available
+        // to parse out of the raw html, so we just delete them.
         continue;
       }
-
-      $(subElement)
-        .nextUntil(heading, "cloudx-pricing-table")
-        .each((_, tableElement) => {
-          const tableLayout = $(tableElement).attr("layout") ?? "";
-          const json = tableLayout
-            .replace(/True/g, "true")
-            .replace(/False/g, "false")
-            .replace(/'/g, '"');
-          const layout = JSON.parse(json);
-          if (layout?.rows) {
-            structure[type][subType] = layout.rows;
-          }
-        });
-    }
-    if (Object.keys(structure[type]).length == 0) {
-      delete structure[type];
+      if (tables[type] != null) {
+        console.log("warning -- overwriting", type);
+      }
+      tables.push(layout.rows);
     }
   }
 
   // The gpu data is stored in a separate iframe in a different format.
   // This gets fixed later.
-  structure.gpus = $("iframe").attr("src");
+  const gpuUrl = $("iframe").attr("src");
+  const gpus = await parseGpuData(await fetchGpuData(gpuUrl));
 
-  return structure;
+  return {
+    tables,
+    gpus,
+  };
+}
+
+const PREFIX = [
+  "us",
+  "europe",
+  "asia",
+  "northamerica",
+  "southamerica",
+  "australia",
+  "me",
+];
+
+function toRegion(key: string): string {
+  if (key.includes("-")) return key;
+  for (const prefix of PREFIX) {
+    if (key.startsWith(prefix)) {
+      return `${prefix}-${key.slice(prefix.length)}`;
+    }
+  }
+  throw Error(`unknown region: "${key}"`);
+}
+
+function formatCostMap(costMap?: { [region: string]: string }):
+  | {
+      [region: string]: number;
+    }
+  | undefined {
+  if (costMap == null) {
+    return costMap;
+  }
+  const result = {};
+  for (const key in costMap) {
+    result[toRegion(key)] = parseFloat(costMap[key]);
+  }
+  return result;
+}
+
+interface PriceData {
+  full?: { [region: string]: number };
+  spot?: { [region: string]: number };
+}
+
+function toInteger(s?: string): number | undefined {
+  if (s == null) return s;
+  return parseInt(s.split(" ")[0]);
+}
+
+export function machineTypeToPriceData({ tables, gpus }): {
+  [name: string]: PriceData;
+} {
+  const prices: { [name: string]: Price } = {};
+  for (const rows of tables) {
+    if (JSON.stringify(rows).includes("e2-")) {
+      console.log(rows);
+    }
+    const headings = rows[0].cells.map((heading) => {
+      return heading.split(" ")[0].toLowerCase().split("(")[0];
+    });
+    if (headings[0] != "machine") {
+      // this is part of table given how to make a custom machine type
+      continue;
+    }
+    for (let i = 1; i < rows.length; i++) {
+      const { cells } = rows[i];
+      if (cells[0].includes("custom-machine-type")) {
+        continue;
+      }
+      const row: any = {};
+      for (let j = 0; j < headings.length; j++) {
+        row[headings[j]] = cells[j];
+      }
+      prices[row.machine.split(" ")[0]] = {
+        prices: formatCostMap((row.price ?? row["on-demand"])?.priceByRegion),
+        spot: formatCostMap(row.spot?.priceByRegion),
+        vcpu: toInteger(row.virtual ?? row.vcpu),
+        memory: toInteger(row["memory"]),
+      };
+    }
+  }
+  for (const name in gpus) {
+    const d = gpus[name];
+    prices[name.toLowerCase().replace(" ", "-")] = {
+      ...d,
+      prices: formatCostMap(d.prices),
+      spot: formatCostMap(d.spot),
+    };
+  }
+
+  return prices;
 }

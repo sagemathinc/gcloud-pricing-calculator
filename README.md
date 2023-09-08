@@ -28,7 +28,9 @@ await gcloudPricing.getData(Infinity);
 
 ## Todo
 
-I intend to write some convenience functionality that uses the parsed data to actually do useful things. That's not implemented yet.
+- I intend to write some convenience functionality that uses the parsed data to actually do useful things. That's not implemented yet.
+
+- We only get data about instances from [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) . The data about disks and images is templated in via Javascript somehow, so that's simply not available to parse. Thus this package provides _**no information about disk pricing**_.
 
 ## Warning
 
