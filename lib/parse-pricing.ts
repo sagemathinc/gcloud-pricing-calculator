@@ -91,33 +91,51 @@ export async function fetchPricingData() {
 export async function parsePricingData(body: string) {
   // Use cheerio to load the HTML
   const $ = cheerio.load(body);
-  const structure = {};
+  const structure: any = {};
 
-  // Here we target h2 elements as the main keys in our structure. We could change the selector to match the correct hierarchy.
-  $("h2[data-text]").each((_, element) => {
+  for (const element of $("h2[data-text]")) {
     const type = $(element).attr("id");
-    if (type == null) return;
+    if (!type) {
+      continue;
+    }
     structure[type] = {};
 
     // Find the subsequent h4 elements, until the next h2
-    $(element)
-      .nextUntil("h2", "h4[data-text]")
-      .each((_, subElement) => {
-        const subType = $(subElement).attr("id");
+    let heading = "h4";
+    let sections = $(element).nextUntil("h2", "h4[data-text]");
 
-        $(subElement)
-          .nextUntil("h4", "cloudx-pricing-table")
-          .each((_, tableElement) => {
-            const tableLayout = $(tableElement).attr("layout") ?? "";
-            const json = tableLayout
-              .replace(/True/g, "true")
-              .replace(/False/g, "false")
-              .replace(/'/g, '"');
-            const layout = JSON.parse(json);
-            structure[type][subType] = layout;
-          });
-      });
-  });
+    if (sections.length == 0) {
+      sections = $(element).nextUntil("h2", "h3[data-text]");
+      heading = "h3";
+    }
+    for (const subElement of sections) {
+      const subType = $(subElement).attr("id");
+      if (!subType) {
+        continue;
+      }
+
+      $(subElement)
+        .nextUntil(heading, "cloudx-pricing-table")
+        .each((_, tableElement) => {
+          const tableLayout = $(tableElement).attr("layout") ?? "";
+          const json = tableLayout
+            .replace(/True/g, "true")
+            .replace(/False/g, "false")
+            .replace(/'/g, '"');
+          const layout = JSON.parse(json);
+          if (layout?.rows) {
+            structure[type][subType] = layout.rows;
+          }
+        });
+    }
+    if (Object.keys(structure[type]).length == 0) {
+      delete structure[type];
+    }
+  }
+
+  // The gpu data is stored in a separate iframe in a different format.
+  // This gets fixed later.
+  structure.gpus = $("iframe").attr("src");
 
   return structure;
 }
