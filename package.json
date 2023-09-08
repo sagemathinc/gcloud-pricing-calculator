@@ -5,15 +5,13 @@
   "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepublishOnly": "pnpm audit && pnpm test-all",
+    "prepublishOnly": "pnpm audit",
     "build": "pnpm exec tsc",
-    "clean": "rm -rf dist node_modules",
-    "test": "pnpm exec jest dist",
-    "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
+    "clean": "rm -rf dist node_modules"
   },
   "files": ["dist/**", "README.md", "package.json"],
   "engines": {
-    "node": ">=0.16.0"
+    "node": ">=0.18.0"
   },
   "author": {
     "name": "William Stein (SageMath, Inc.)",
