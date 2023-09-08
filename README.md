@@ -7,12 +7,18 @@ pnpm install @cocalc/gcloud-pricing-calculator
 ```
 
 ```js
-const pricing = require("@cocalc/gcloud-pricing-calculator");
-await pricing.getData();
-// outputs object with all the raw pricing data
+>>> pricing = require("@cocalc/gcloud-pricing-calculator");
+>>> data = await pricing.getData();
+>>> console.log(data["n1-highmem-4"]);
+{ prices: { 'us-central1': 0.236606, 'us-west2': 0.2842, 'us-west3': 0.2842,
+  spot: {...},
+  vcpu: 4,
+  memory: 26}
 ```
 
-The result is cached on disk for 7 days by default, but you can change the cache time by giving the number of days to cache as an argument to getData, e.g., give 0 to not use the cache:
+**The format should be self explanatory!**
+
+The result is cached on disk for 1 day by default, but you can change the cache time by giving the number of days to cache as an argument to getData, e.g., give 0 to not use the cache:
 
 ```js
 // not cached
@@ -26,11 +32,9 @@ Use Infinity if you want to always use the pricing data included with this packa
 await gcloudPricing.getData(Infinity);
 ```
 
-## Todo
+## Todo: disks are not included yet
 
-- I intend to write some convenience functionality that uses the parsed data to actually do useful things. That's not implemented yet.
-
-- We only get data about instances from [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) . The data about disks and images is templated in via Javascript somehow, so that's simply not available to parse. Thus this package provides _**no information about disk pricing**_.
+- We only get data about _instances_ from [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) . The data about disks and images is templated in via Javascript somehow, so that's simply not available to parse. Thus this package provides _**no information about disk pricing**_.
 
 ## Warning
 
@@ -47,12 +51,11 @@ If you already have the SKU ID in hand for a specific charge, you can look up th
 In summary:
 
 - There's a confusing api to download all possible skus \(tens of thousands of them\) and it's very hard to make heads or tales of what those mean. \(you can't appreciate how horrid it is if you don't try it...\)
-- When you go to create a VM in the cloud console it displays a price. As far as I can tell, there is no api available for us for getting _that_ price. I also don't know if the price there can be trusted.  I've been using GCP for over 10 years now, and always thought such an API would appear... but it seems to not have. At least I can't find it.
+- When you go to create a VM in the cloud console it displays a price. As far as I can tell, there is no api available for us for getting _that_ price. I also don't know if the price there can be trusted. I've been using GCP for over 10 years now, and always thought such an API would appear... but it seems to not have. At least I can't find it.
 - When you go to [https://cloud.google.com/compute/all\-pricing\#compute\-engine\-pricing](https://cloud.google.com/compute/all-pricing#compute-engine-pricing) you find pricing, which is easy to understand and read, but it's HTML so not easy to use programatically. However, it is unfortunately dangerously **wrong** sometimes, e.g., the Nvidia K80 GPU near the bottom spot instance is listed as **\$0.0394 / hour** in Iowa, which would be an amazing deal!
   - according to the cloud console \(when creating a vm\) that exact thing is **\$0.19/per hour** for K80 in Iowa!
   - according to https://cloud.google.com/products/calculator it is \$0.18/GPU per hour.
   - according to the cloud console \(right when you make a machine\) it is \$0.05/hour in Europe, which is pretty amazing still, if true. But is it? \(I was easily able to start such a GPU spot instance running, so it's available\).
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
-- I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost.  Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
-- Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision. 
-
+- I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
+- Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.

@@ -1,4 +1,9 @@
-import { fetchPricingData, parsePricingData } from "./parse-pricing";
+import {
+  fetchPricingData,
+  parsePricingData,
+  machineTypeToPriceData,
+  PriceData,
+} from "./parse-pricing";
 import cacache from "cacache";
 import { join } from "path";
 import debug from "debug";
@@ -7,10 +12,11 @@ const log = debug("gcloud-info");
 
 const cachePath = join(__dirname, "cache");
 
-// just to give it a name
-export type PricingData = any;
+const DEFAULT_CACHE_DAYS = 1;
 
-export async function getData(maxAgeDays: number = 7): Promise<PricingData> {
+export async function getData(
+  maxAgeDays: number = DEFAULT_CACHE_DAYS,
+): Promise<PriceData> {
   log("checking for cached data");
   let x;
   try {
@@ -30,7 +36,8 @@ async function updateData() {
   log("downloading data");
   const body = await fetchPricingData();
   log("parsing data");
-  const data = await parsePricingData(body);
+  const raw = await parsePricingData(body);
+  const data = machineTypeToPriceData(raw);
   await cacache.put(
     cachePath,
     "data",

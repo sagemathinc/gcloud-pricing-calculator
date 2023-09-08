@@ -97,15 +97,16 @@ export async function parsePricingData(body: string) {
   for (const x of $("cloudx-pricing-table")) {
     const data = $(x);
     const tableLayout = data.attr("layout");
-    if (!tableLayout) continue;
+    if (!tableLayout) {
+      continue;
+    }
     const json = tableLayout
       .replace(/True/g, "true")
       .replace(/False/g, "false")
       .replace(/'/g, '"');
     const layout = JSON.parse(json);
     if (layout?.rows) {
-      const type = data.prev().attr("id");
-      if (!type) continue;
+      const type = data.prev().attr("id") ?? "";
       if (
         type.includes("image") ||
         type.includes("disk") ||
@@ -125,7 +126,13 @@ export async function parsePricingData(body: string) {
   // The gpu data is stored in a separate iframe in a different format.
   // This gets fixed later.
   const gpuUrl = $("iframe").attr("src");
-  const gpus = await parseGpuData(await fetchGpuData(gpuUrl));
+  let gpus;
+  if (!gpuUrl) {
+    console.warn("GPU data is missing");
+    gpus = {};
+  } else {
+    gpus = await parseGpuData(await fetchGpuData(gpuUrl));
+  }
 
   return {
     tables,
@@ -168,9 +175,13 @@ function formatCostMap(costMap?: { [region: string]: string }):
   return result;
 }
 
-interface PriceData {
-  full?: { [region: string]: number };
+export interface PriceData {
+  prices?: { [region: string]: number };
   spot?: { [region: string]: number };
+  vcpu?: number;
+  memory?: number;
+  count?: number; // for old gpu's only
+  max?: number; // for old gpu's only
 }
 
 function toInteger(s?: string): number | undefined {
@@ -181,11 +192,8 @@ function toInteger(s?: string): number | undefined {
 export function machineTypeToPriceData({ tables, gpus }): {
   [name: string]: PriceData;
 } {
-  const prices: { [name: string]: Price } = {};
+  const prices: { [name: string]: PriceData } = {};
   for (const rows of tables) {
-    if (JSON.stringify(rows).includes("e2-")) {
-      console.log(rows);
-    }
     const headings = rows[0].cells.map((heading) => {
       return heading.split(" ")[0].toLowerCase().split("(")[0];
     });
@@ -205,7 +213,7 @@ export function machineTypeToPriceData({ tables, gpus }): {
       prices[row.machine.split(" ")[0]] = {
         prices: formatCostMap((row.price ?? row["on-demand"])?.priceByRegion),
         spot: formatCostMap(row.spot?.priceByRegion),
-        vcpu: toInteger(row.virtual ?? row.vcpu),
+        vcpu: toInteger(row.virtual ?? row.vcpu ?? row.vcpus),
         memory: toInteger(row["memory"]),
       };
     }
