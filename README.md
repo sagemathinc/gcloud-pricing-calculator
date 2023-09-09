@@ -16,7 +16,14 @@ pnpm install @cocalc/gcloud-pricing-calculator
   memory: 26}
 ```
 
-**The format should be self explanatory!**
+The format should hopefully be self explanatory. It's a map from machine instance types to:
+
+```js
+prices: {region to price in dollars per hour}
+spot: {region to SPOT price in dollars per hour}
+vcpu: number of cpus in this instance
+memory: GB of ram
+```
 
 The result is cached on disk for 1 day by default, but you can change the cache time by giving the number of days to cache as an argument to getData, e.g., give 0 to not use the cache:
 
@@ -25,6 +32,8 @@ The result is cached on disk for 1 day by default, but you can change the cache 
 await gcloudPricing.getData(0);
 ```
 
+Google updates spot prices "at most once per month" and on demand prices much less frequently.
+
 Use Infinity if you want to always use the pricing data included with this package \(e.g., you're using node version &lt; 18 without fetch\):
 
 ```js
@@ -32,15 +41,23 @@ Use Infinity if you want to always use the pricing data included with this packa
 await gcloudPricing.getData(Infinity);
 ```
 
-## Todo: disks are not included yet
+In addition to instance types, the data object also has keys disk-standard and disk-ssd. These map to an object:
 
-- We only get data about _instances_ from [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) . The data about disks and images is templated in via Javascript somehow, so that's simply not available to parse. Thus this package provides _**no information about disk pricing**_.
+```js
+{
+prices: {region to price in dollars per hour}
+}
+```
+
+We don't include any other information about disk or snapshot prices. If you need that, see the code in lib/disk-pricing.
 
 ## Warning
 
 See note below about spot instance pricing for GPU's, which is clearly wrong on Google's pricing page. I've manually corrected this in the output of getData, with what might be a significant overestimate.
 
 Also, your prices can be different than the published rates, e.g., if Google has a special negotiated rate with you.
+
+This package is public and MIT licensed and anybody can use it, but I only care about my personal application to https://cocalc.com.  If you need more, [send a pull request!](https://github.com/sagemathinc/gcloud-pricing-calculator)
 
 ## Motivation
 
@@ -59,3 +76,4 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
+

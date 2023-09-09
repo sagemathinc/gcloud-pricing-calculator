@@ -73,10 +73,12 @@ We parse this into an object of the form:
     },
   },
 };
+
 */
 
 import cheerio from "cheerio";
 import { fetchGpuData, parseGpuData } from "./gpu-pricing";
+import { getDisks } from "./disk-pricing";
 
 export async function fetchPricingData() {
   const gcloudUrl = "https://cloud.google.com/compute/all-pricing";
@@ -89,7 +91,8 @@ export async function fetchPricingData() {
   return body;
 }
 
-export async function parsePricingData(body: string) {
+export async function parsePricingData() {
+  const body = await fetchPricingData();
   // Use cheerio to load the HTML
   const $ = cheerio.load(body);
   const tables: any[] = [];
@@ -134,9 +137,12 @@ export async function parsePricingData(body: string) {
     gpus = await parseGpuData(await fetchGpuData(gpuUrl));
   }
 
+  const disks = await getDisks();
+
   return {
     tables,
     gpus,
+    disks,
   };
 }
 
@@ -189,7 +195,7 @@ function toInteger(s?: string): number | undefined {
   return parseInt(s.split(" ")[0]);
 }
 
-export function machineTypeToPriceData({ tables, gpus }): {
+export function machineTypeToPriceData({ tables, gpus, disks }): {
   [name: string]: PriceData;
 } {
   const prices: { [name: string]: PriceData } = {};
@@ -225,6 +231,10 @@ export function machineTypeToPriceData({ tables, gpus }): {
       prices: formatCostMap(d.prices),
       spot: formatCostMap(d.spot),
     };
+  }
+
+  for (const name in disks) {
+    prices[`disk-${name}`] = { prices: disks[name] };
   }
 
   return prices;

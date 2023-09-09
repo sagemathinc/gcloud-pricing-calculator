@@ -1,5 +1,4 @@
 import {
-  fetchPricingData,
   parsePricingData,
   machineTypeToPriceData,
   PriceData,
@@ -33,10 +32,8 @@ export async function getData(
 }
 
 async function updateData() {
-  log("downloading data");
-  const body = await fetchPricingData();
   log("parsing data");
-  const raw = await parsePricingData(body);
+  const raw = await parsePricingData();
   const data = machineTypeToPriceData(raw);
   await cacache.put(
     cachePath,
