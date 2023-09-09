@@ -7,6 +7,11 @@ https://cloud-dot-devsite-v2-prod.appspot.com/compute/all-pricing_8a84daa1871ac0
 
 so we parse this completely separately than the other pricing data.
 Obviously, at some random moment, this is just going to break.
+
+TODO:
+add very similar parsing of disk pricing from https://cloud.google.com/compute/disks-image-pricing
+but using fetch won't work for this. We need to use maybe chromium headless to do this safely?
+Not sure.
 */
 
 import cheerio from "cheerio";
