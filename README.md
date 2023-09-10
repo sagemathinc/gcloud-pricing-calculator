@@ -1,6 +1,6 @@
 # Google Cloud Pricing Info and Calculator
 
-This is a node.js library that downloads and parses the website https://cloud.google.com/compute/vm-instance-pricing, and then makes it possibly to very quickly use all of that data from Javascript.
+This is a node.js library that downloads and parses the website https://cloud.google.com/compute/vm-instance-pricing and several other public data sources form Google, then makes it possibly to very quickly use all of that data from Javascript.
 
 ```sh
 pnpm install @cocalc/gcloud-pricing-calculator
@@ -58,6 +58,15 @@ See note below about spot instance pricing for GPU's, which is clearly wrong on 
 Also, your prices can be different than the published rates, e.g., if Google has a special negotiated rate with you.
 
 This package is public and MIT licensed and anybody can use it, but I only care about my personal application to https://cocalc.com.  If you need more, [send a pull request!](https://github.com/sagemathinc/gcloud-pricing-calculator)
+
+## Related Official Google Pages
+
+- [Google Cost Estimation API](https://cloud.google.com/billing/docs/how-to/cost-estimates-using-api) \-\- this is an official new "Preview" endpoint that gives the cost for a workload.   It's also accessible in the Google Cloud Console: `https://console.cloud.google.com/billing/YOUR BILLING ACOUNT ID/estimate` and it's called "Compute Engine workload estimate" there.
+- [Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator)
+- [VM instance pricing](https://cloud.google.com/compute/vm-instance-pricing)
+- [Disk and image pricing](https://cloud.google.com/compute/disks-image-pricing)
+- [gcp\-compute.json](https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json)
+- [Cloud pricing api](https://cloud.google.com/billing/v1/how-tos/catalog-api)
 
 ## Motivation
 
