@@ -5,15 +5,11 @@
   "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepublishOnly": "pnpm audit",
+    "prepublishOnly": "pnpm audit && rm -rf dist && pnpm exec tsc && echo \"require('./dist/lib').getData()\" | node",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules"
   },
-  "files": [
-    "dist/**",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist/**", "README.md", "package.json"],
   "engines": {
     "node": ">=0.18.0"
   },
@@ -27,10 +23,7 @@
     "cheerio": "1.0.0-rc.12",
     "debug": "^4.3.4"
   },
-  "keywords": [
-    "google",
-    "cloud"
-  ],
+  "keywords": ["google", "cloud"],
   "license": "MIT",
   "repository": {
     "type": "git",

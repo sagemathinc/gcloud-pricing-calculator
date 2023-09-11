@@ -16,19 +16,9 @@ pnpm install @cocalc/gcloud-pricing-calculator
   memory: 26}
 ```
 
-The format is defined in typescript and is:
+The output is of type GoogleCloudData as defined in typescript below:
 
 ```ts
-
-interface Data {
-  machineTypes: { [machineType: string]: PriceData };
-  disks: {
-    standard: { [zone: string]: number };
-    ssd: { [zone: string]: number };
-  };
-  accelerators: { [acceleratorType: string]: PriceData };
-  zones: { [zone: string]: ZoneData };
-}
 
 interface PriceData {
   prices?: { [region: string]: number };
@@ -44,6 +34,17 @@ interface ZoneData {
   location: string; // description of where it is
   lowC02: boolean; // if true, low c02 emissions
   gpus: boolean; // if true, has gpus
+}
+
+
+interface GoogleCloudData {
+  machineTypes: { [machineType: string]: PriceData };
+  disks: {
+    standard: { [zone: string]: number };
+    ssd: { [zone: string]: number };
+  };
+  accelerators: { [acceleratorType: string]: PriceData };
+  zones: { [zone: string]: ZoneData };
 }
 
 
