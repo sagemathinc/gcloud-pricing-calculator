@@ -9,21 +9,47 @@ pnpm install @cocalc/gcloud-pricing-calculator
 ```js
 >>> pricing = require("@cocalc/gcloud-pricing-calculator");
 >>> data = await pricing.getData();
->>> console.log(data["n1-highmem-4"]);
+>>> console.log(data.machineTypes["n1-highmem-4"]);
 { prices: { 'us-central1': 0.236606, 'us-west2': 0.2842, 'us-west3': 0.2842,
   spot: {...},
   vcpu: 4,
   memory: 26}
 ```
 
-The format should hopefully be self explanatory. It's a map from machine instance types to:
+The format is defined in typescript and is:
 
-```js
-prices: {region to price in dollars per hour}
-spot: {region to SPOT price in dollars per hour}
-vcpu: number of cpus in this instance
-memory: GB of ram
+```ts
+
+interface Data {
+  machineTypes: { [machineType: string]: PriceData };
+  disks: {
+    standard: { [zone: string]: number };
+    ssd: { [zone: string]: number };
+  };
+  accelerators: { [acceleratorType: string]: PriceData };
+  zones: { [zone: string]: ZoneData };
+}
+
+interface PriceData {
+  prices?: { [region: string]: number };
+  spot?: { [region: string]: number };
+  vcpu?: number;
+  memory?: number;
+  count?: number; // for gpu's only
+  max?: number; // for gpu's only
+}
+
+interface ZoneData {
+  machineTypes: string; // ['e2','n1','n2', 't2d' ... ] -- array of machine type prefixes
+  location: string; // description of where it is
+  lowC02: boolean; // if true, low c02 emissions
+  gpus: boolean; // if true, has gpus
+}
+
+
 ```
+
+In particular, it gives price data about all machine types, standard disks and ssd disks, and GPU's ('accelerators').  It also lists all zones and has information about if they have GPU's, whether they are low CO2, and where they are.
 
 The result is cached on disk for 1 day by default, but you can change the cache time by giving the number of days to cache as an argument to getData, e.g., give 0 to not use the cache:
 
@@ -57,11 +83,11 @@ See note below about spot instance pricing for GPU's, which is clearly wrong on 
 
 Also, your prices can be different than the published rates, e.g., if Google has a special negotiated rate with you.
 
-This package is public and MIT licensed and anybody can use it, but I only care about my personal application to https://cocalc.com.  If you need more, [send a pull request!](https://github.com/sagemathinc/gcloud-pricing-calculator)
+This package is public and MIT licensed and anybody can use it, but I only care about my personal application to https://cocalc.com. If you need more, [send a pull request!](https://github.com/sagemathinc/gcloud-pricing-calculator)
 
 ## Related Official Google Pages
 
-- [Google Cost Estimation API](https://cloud.google.com/billing/docs/how-to/cost-estimates-using-api) \-\- this is an official new "Preview" endpoint that gives the cost for a workload.   It's also accessible in the Google Cloud Console: `https://console.cloud.google.com/billing/YOUR BILLING ACOUNT ID/estimate` and it's called "Compute Engine workload estimate" there.
+- [Google Cost Estimation API](https://cloud.google.com/billing/docs/how-to/cost-estimates-using-api) \-\- this is an official new "Preview" endpoint that gives the cost for a workload. It's also accessible in the Google Cloud Console: `https://console.cloud.google.com/billing/YOUR BILLING ACOUNT ID/estimate` and it's called "Compute Engine workload estimate" there.
 - [Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator)
 - [VM instance pricing](https://cloud.google.com/compute/vm-instance-pricing)
 - [Disk and image pricing](https://cloud.google.com/compute/disks-image-pricing)

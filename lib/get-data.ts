@@ -1,7 +1,6 @@
 import {
   parsePricingData,
   machineTypeToPriceData,
-  PriceData,
 } from "./parse-pricing";
 import cacache from "cacache";
 import { join } from "path";
@@ -13,9 +12,7 @@ const cachePath = join(__dirname, "cache");
 
 const DEFAULT_CACHE_DAYS = 1;
 
-export async function getData(
-  maxAgeDays: number = DEFAULT_CACHE_DAYS,
-): Promise<PriceData> {
+export async function getData(maxAgeDays: number = DEFAULT_CACHE_DAYS) {
   log("checking for cached data");
   let x;
   try {

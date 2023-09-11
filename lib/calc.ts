@@ -4,7 +4,7 @@ import { getData } from "./get-data";
 // sorted starting with cheapest, or {} if we have no info.
 export async function sortedPrices(machineType: string) {
   const data = await getData();
-  const machineTypeData = data[machineType];
+  const machineTypeData = data.machineTypes[machineType];
   if (machineTypeData == null) {
     return {};
   }
@@ -30,4 +30,18 @@ function doSort(priceMap: { [region: string]: number } | undefined) {
     return a.cost - b.cost;
   });
   return v;
+}
+
+export async function zonesWithMachineType(
+  machineType: string,
+): Promise<string[]> {
+  const { zones } = await getData();
+  const t = machineType.split("-")[0];
+  const zonesWith: string[] = [];
+  for (const zone in zones) {
+    if (zones[zone].machineTypes.includes(t)) {
+      zonesWith.push(zone);
+    }
+  }
+  return zonesWith;
 }

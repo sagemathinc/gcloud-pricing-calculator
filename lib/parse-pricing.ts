@@ -79,8 +79,9 @@ We parse this into an object of the form:
 import cheerio from "cheerio";
 import { fetchGpuData, parseGpuData } from "./gpu-pricing";
 import { getDisks } from "./disk-pricing";
+import { getZones, ZoneData } from "./zones";
 
-export async function fetchPricingData() {
+async function fetchPricingData() {
   const gcloudUrl = "https://cloud.google.com/compute/all-pricing";
   const response = await fetch(gcloudUrl, {
     headers: {
@@ -138,11 +139,13 @@ export async function parsePricingData() {
   }
 
   const disks = await getDisks();
+  const zones = await getZones();
 
   return {
     tables,
     gpus,
     disks,
+    zones,
   };
 }
 
@@ -186,8 +189,8 @@ export interface PriceData {
   spot?: { [region: string]: number };
   vcpu?: number;
   memory?: number;
-  count?: number; // for old gpu's only
-  max?: number; // for old gpu's only
+  count?: number; // for gpu's only
+  max?: number; // for gpu's only
 }
 
 function toInteger(s?: string): number | undefined {
@@ -195,10 +198,16 @@ function toInteger(s?: string): number | undefined {
   return parseInt(s.split(" ")[0]);
 }
 
-export function machineTypeToPriceData({ tables, gpus, disks }): {
-  [name: string]: PriceData;
+export function machineTypeToPriceData({ tables, gpus, disks, zones }): {
+  machineTypes: { [machineType: string]: PriceData };
+  disks: {
+    standard: { [zone: string]: number };
+    ssd: { [zone: string]: number };
+  };
+  accelerators: { [acceleratorType: string]: PriceData };
+  zones: { [zone: string]: ZoneData };
 } {
-  const prices: { [name: string]: PriceData } = {};
+  const machineTypes: { [name: string]: PriceData } = {};
   for (const rows of tables) {
     const headings = rows[0].cells.map((heading) => {
       return heading.split(" ")[0].toLowerCase().split("(")[0];
@@ -216,7 +225,8 @@ export function machineTypeToPriceData({ tables, gpus, disks }): {
       for (let j = 0; j < headings.length; j++) {
         row[headings[j]] = cells[j];
       }
-      prices[row.machine.split(" ")[0]] = {
+      const machineType = row.machine.split(" ")[0];
+      machineTypes[machineType] = {
         prices: formatCostMap((row.price ?? row["on-demand"])?.priceByRegion),
         spot: formatCostMap(row.spot?.priceByRegion),
         vcpu: toInteger(row.virtual ?? row.vcpu ?? row.vcpus),
@@ -224,18 +234,15 @@ export function machineTypeToPriceData({ tables, gpus, disks }): {
       };
     }
   }
+  const accelerators: { [acceleratorType: string]: PriceData } = {};
   for (const name in gpus) {
     const d = gpus[name];
-    prices[name.toLowerCase().replace(" ", "-")] = {
+    accelerators[name.toLowerCase().replace(" ", "-")] = {
       ...d,
       prices: formatCostMap(d.prices),
       spot: formatCostMap(d.spot),
     };
   }
 
-  for (const name in disks) {
-    prices[`disk-${name}`] = { prices: disks[name] };
-  }
-
-  return prices;
+  return { machineTypes, accelerators, disks, zones };
 }
