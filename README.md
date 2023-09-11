@@ -1,5 +1,11 @@
 # Google Cloud Pricing Info and Calculator
 
+---
+
+**HUGE WARNING:** The website https://cloud.google.com/compute/vm-instance-pricing at google is FULL OF BUGS, and it informs the instance pricing for this package uses. We will rewrite it to entirely use https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json soon.
+
+---
+
 This is a node.js library that downloads and parses the website https://cloud.google.com/compute/vm-instance-pricing and several other public data sources form Google, then makes it possibly to very quickly use all of that data from Javascript.
 
 ```sh
