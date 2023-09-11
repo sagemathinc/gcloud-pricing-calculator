@@ -201,8 +201,8 @@ function toInteger(s?: string): number | undefined {
 export function machineTypeToPriceData({ tables, gpus, disks, zones }): {
   machineTypes: { [machineType: string]: PriceData };
   disks: {
-    standard: { [zone: string]: number };
-    ssd: { [zone: string]: number };
+    standard: { prices: { [zone: string]: number } };
+    ssd: { prices: { [zone: string]: number } };
   };
   accelerators: { [acceleratorType: string]: PriceData };
   zones: { [zone: string]: ZoneData };
@@ -242,6 +242,13 @@ export function machineTypeToPriceData({ tables, gpus, disks, zones }): {
       prices: formatCostMap(d.prices),
       spot: formatCostMap(d.spot),
     };
+  }
+
+  for (const name in disks) {
+    // makes the format consistent with the PriceData interface,
+    // and also makes it easy to add more data about each disk
+    // later if we need to (e.g., about speed?)
+    disks[name] = { prices: disks[name] };
   }
 
   return { machineTypes, accelerators, disks, zones };

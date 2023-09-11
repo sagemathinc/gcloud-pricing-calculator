@@ -19,7 +19,6 @@ pnpm install @cocalc/gcloud-pricing-calculator
 The output is of type GoogleCloudData as defined in typescript below:
 
 ```ts
-
 interface PriceData {
   prices?: { [region: string]: number };
   spot?: { [region: string]: number };
@@ -36,21 +35,18 @@ interface ZoneData {
   gpus: boolean; // if true, has gpus
 }
 
-
 interface GoogleCloudData {
   machineTypes: { [machineType: string]: PriceData };
   disks: {
-    standard: { [zone: string]: number };
-    ssd: { [zone: string]: number };
+    standard: { prices: { [zone: string]: number } };
+    ssd: { prices: { [zone: string]: number } };
   };
   accelerators: { [acceleratorType: string]: PriceData };
   zones: { [zone: string]: ZoneData };
 }
-
-
 ```
 
-In particular, it gives price data about all machine types, standard disks and ssd disks, and GPU's ('accelerators').  It also lists all zones and has information about if they have GPU's, whether they are low CO2, and where they are.
+In particular, it gives price data about all machine types, standard disks and ssd disks, and GPU's ('accelerators'). It also lists all zones and has information about if they have GPU's, whether they are low CO2, and where they are.
 
 The result is cached on disk for 1 day by default, but you can change the cache time by giving the number of days to cache as an argument to getData, e.g., give 0 to not use the cache:
 
@@ -112,4 +108,3 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
-
