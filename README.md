@@ -2,7 +2,7 @@
 
 ---
 
-**HUGE WARNING:** The website https://cloud.google.com/compute/vm-instance-pricing at google is inconsistent in many ways, and it informs the instance pricing for this package uses. We will rewrite it to entirely use https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json soon, but even that isn't enough, since it's inconsistent with the pricing api's and the official calculator in some cases.    I don't think I can properly write something to determine spot instance pricing without just buying various instances, waiting 2 days for the pricing to post, and comparing with all the inconsistent prices Google posts.  Perhaps the best we can do for now, is just assume spot is 60% off the full price... :-(
+**HUGE WARNING:** The website https://cloud.google.com/compute/vm-instance-pricing at google is inconsistent in many ways, and it informs the instance pricing for this package uses. We will rewrite it to entirely use https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json soon, but even that isn't enough, since it's inconsistent with the pricing api's and the official calculator in some cases. I don't think I can properly write something to determine spot instance pricing without just buying various instances, waiting 2 days for the pricing to post, and comparing with all the inconsistent prices Google posts. Perhaps the best we can do for now, is just assume spot is 60% off the full price... :-(
 
 ---
 
@@ -119,7 +119,7 @@ In summary:
 
 - [https://cloud.google.com/blog/topics/cost\-management/how\-to\-use\-the\-new\-pricing\-api](https://cloud.google.com/blog/topics/cost-management/how-to-use-the-new-pricing-api)
 - [[https://cloud.google.com/billing/docs/how\-to/get\-pricing\-information\-api](https://cloud.google.com/billing/docs/how-to/get-pricing-information-api) ](https://cloud.google.com/billing/docs/how-to/get-pricing-information-api)
-- https://cloud.google.com/skus 
+- https://cloud.google.com/skus
 
 This URL to enable billing api in the project:
 
@@ -144,4 +144,3 @@ curl -X get https://cloudbilling.googleapis.com/v2beta/services/6F81-5844-456A?k
 curl -X GET  https://cloudbilling.googleapis.com/v2beta/skus/EDA0-3A70-3138/price?key=$API_KEY
 curl -X GET https://cloudbilling.googleapis.com/v1beta/skus/DD90-547C-2AAA/price?key=$API_KEY
 ```
-
