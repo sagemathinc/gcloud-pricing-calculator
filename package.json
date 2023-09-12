@@ -1,6 +1,6 @@
 {
   "name": "@cocalc/gcloud-pricing-calculator",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Google Cloud Pricing Calculator",
   "main": "./dist/lib/index.js",
   "scripts": {
