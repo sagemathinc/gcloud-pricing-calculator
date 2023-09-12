@@ -2,7 +2,7 @@
 
 ---
 
-**HUGE WARNING:** The website https://cloud.google.com/compute/vm-instance-pricing at google is FULL OF BUGS, and it informs the instance pricing for this package uses. We will rewrite it to entirely use https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json soon.
+**HUGE WARNING:** The website https://cloud.google.com/compute/vm-instance-pricing at google is inconsistent in many ways, and it informs the instance pricing for this package uses. We will rewrite it to entirely use https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json soon, but even that isn't enough, since it's inconsistent with the pricing api's and the official calculator in some cases.    I don't think I can properly write something to determine spot instance pricing without just buying various instances, waiting 2 days for the pricing to post, and comparing with all the inconsistent prices Google posts.  Perhaps the best we can do for now, is just assume spot is 60% off the full price... :-(
 
 ---
 
@@ -114,3 +114,34 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
+
+# New approach using New Cloud Pricing API
+
+- [https://cloud.google.com/blog/topics/cost\-management/how\-to\-use\-the\-new\-pricing\-api](https://cloud.google.com/blog/topics/cost-management/how-to-use-the-new-pricing-api)
+- [[https://cloud.google.com/billing/docs/how\-to/get\-pricing\-information\-api](https://cloud.google.com/billing/docs/how-to/get-pricing-information-api) ](https://cloud.google.com/billing/docs/how-to/get-pricing-information-api)
+- https://cloud.google.com/skus 
+
+This URL to enable billing api in the project:
+
+```
+https://console.cloud.google.com/apis/enableflow?apiid=cloudbilling.googleapis.com&authuser=0&project=your_project_id
+```
+
+Get API key:
+
+```
+https://console.cloud.google.com/apis/credentials?authuser=1
+```
+
+Get data:
+
+```
+curl -X GET https://cloudbilling.googleapis.com/v2beta/services?key=$API_KEY&filter="name:services/6F81-5844-456A"
+
+curl -X get https://cloudbilling.googleapis.com/v2beta/services/6F81-5844-456A?key=$API_KEY
+
+
+curl -X GET  https://cloudbilling.googleapis.com/v2beta/skus/EDA0-3A70-3138/price?key=$API_KEY
+curl -X GET https://cloudbilling.googleapis.com/v1beta/skus/DD90-547C-2AAA/price?key=$API_KEY
+```
+
