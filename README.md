@@ -2,7 +2,34 @@
 
 ---
 
+**UPDATE (Sept 14, 2023):**
+
+I subscribed to the private mailing list for spot instance pricing updates, and
+the latest post mentions https://cloud.google.com/spot-vms/pricing, which I
+didn't know about. It's a page very similar to
+https://cloud.google.com/compute/vm-instance-pricing, but just for spot prices,
+and in a different format (just giving the price per vcpu/GB), and not including
+any GPU info. It appears to be correct. Here's what I know:
+
+- based on reverse engineering (actually buying things and seeing how much I'm charged a day or two later), the price displayed in the cloud console under "Monthly estimate" in the upper right is always correct in every edge case I've tried.
+- Right now I tried a c2-standard-4 in us-central1. At https://cloud.google.com/compute/vm-instance-pricing, it is listed as $13.83496/month.  The price from https://cloud.google.com/spot-vms/pricing for this same VM is $730 \times (4 \times 0.00432 + 16 \times 0.000578) = 19.36544$, which exactly macthes the GCP console. This is a HUGE difference between the two pages. Also https://cloud.google.com/spot-vms/pricing says the spot pricing for c2's has never changed historically, so my guess that https://cloud.google.com/compute/vm-instance-pricing is just out of date is wrong.
+
+The page https://cloud.google.com/spot-vms/pricing is also running some generated code that is building the pricing based on the json data from here:
+https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json
+This suggests the gcp-compute.json data source may be pretty good! It's mostly a dump
+of the public non-negotiated pricing data. It is wrong for A100's though, where for the
+sku DD90-547C-2AAA the file gcp-compute.json shows a price of 571200000 nanos, whereas the
+actual price if you download the official pricing data manually from the api is $1.5712, i.e., it is off by \$1. 
+
+---
+
 **HUGE WARNING:** The website https://cloud.google.com/compute/vm-instance-pricing at google is inconsistent in many ways, and it informs the instance pricing for this package uses. We will rewrite it to entirely use https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json soon, but even that isn't enough, since it's inconsistent with the pricing api's and the official calculator in some cases. I don't think I can properly write something to determine spot instance pricing without just buying various instances, waiting 2 days for the pricing to post, and comparing with all the inconsistent prices Google posts. Perhaps the best we can do for now, is just assume spot is 60% off the full price... :-(
+
+OK, I did tests with preemptible A100's and the pricing the Google Cloud console shows when you're about to create a VM very closely matches with what is actually charged. The problem is that so far I've not found any way to bulk get that data. There is an api mentioned at
+
+https://cloud.google.com/billing/docs/how-to/cost-estimates-using-api
+
+that should make it possible to get that info for one specific instance. Maybe I can just call it a few hundred times? (Answer: it gives wrong data for spot A100, so watch out!)
 
 ---
 
