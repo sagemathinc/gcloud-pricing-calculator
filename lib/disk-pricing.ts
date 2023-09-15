@@ -39,40 +39,19 @@ We can thus easily get some additional keys for our raw pricing object:
 We could easily add more, but this is all I need for my application.
 */
 
+import { getComputeJson, toPriceMap } from "./gcp-compute";
+
 export async function getDisks(): Promise<{
   standard: { [region: string]: number };
   ssd: { [region: string]: number };
 }> {
-  const res = await fetch(
-    "https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json",
+  const data = await getComputeJson();
+  const standard = toPriceMap(
+    data.gcp.compute.persistent_disk.standard.capacity.storagepdcapacity,
   );
-  const data = await res.json();
-  const disk_standard = Object.fromEntries(
-    Object.entries(
-      data.gcp.compute.persistent_disk.standard.capacity.storagepdcapacity
-        .regions,
-    ).map(([region, value]) => {
-      return [region, getPrice((value as any)["price"])];
-    }),
+  const ssd = toPriceMap(
+    data.gcp.compute.persistent_disk.ssd.capacity.storagepdssd,
   );
 
-  const disk_ssd = Object.fromEntries(
-    Object.entries(
-      data.gcp.compute.persistent_disk.ssd.capacity.storagepdssd.regions,
-    ).map(([region, value]) => {
-      return [region, getPrice((value as any)["price"])];
-    }),
-  );
-
-  return { standard: disk_standard, ssd: disk_ssd };
-}
-
-function getPrice(prices) {
-  // I have no clue why there are multiple prices in some cases.
-  // Usually all but one is equal to 0. We take the max to be safe.
-  let price = prices[0]["nanos"] / 10 ** 9 / 730;
-  for (let i = 1; i < prices.length; i++) {
-    price = Math.max(price, prices[i]["nanos"] / 10 ** 9 / 730);
-  }
-  return price;
+  return { standard, ssd };
 }
