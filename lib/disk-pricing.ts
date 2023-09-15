@@ -39,18 +39,19 @@ We can thus easily get some additional keys for our raw pricing object:
 We could easily add more, but this is all I need for my application.
 */
 
-import { getComputeJson, toPriceMap } from "./gcp-compute";
+import { toPriceMap } from "./gcp-compute";
 
 export async function getDisks(): Promise<{
   standard: { [region: string]: number };
   ssd: { [region: string]: number };
 }> {
-  const data = await getComputeJson();
-  const standard = toPriceMap(
-    data.gcp.compute.persistent_disk.standard.capacity.storagepdcapacity,
+  const standard = await toPriceMap(
+    "gcp.compute.persistent_disk.standard.capacity.storagepdcapacity",
+    1 / 730,
   );
-  const ssd = toPriceMap(
-    data.gcp.compute.persistent_disk.ssd.capacity.storagepdssd,
+  const ssd = await toPriceMap(
+    "gcp.compute.persistent_disk.ssd.capacity.storagepdssd",
+    1 / 730,
   );
 
   return { standard, ssd };
