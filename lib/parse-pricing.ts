@@ -174,7 +174,22 @@ export function machineTypeToPriceData({
         row[headings[j]] = cells[j];
       }
       const machineType = row.machine.split(" ")[0];
-      const vcpu = toInteger(row.virtual ?? row.vcpu ?? row.vcpus);
+      if (machineType.startsWith("e2-micro")) {
+        console.log(row);
+      }
+      let vcpu = toInteger(row.virtual ?? row.vcpu ?? row.vcpus);
+
+      // There's a special case with pricing for the shared cpu cases, which are
+      // e2-micro, e2-small, e2-medium, where the vcpu that is the input for
+      // computing the spot price is 0.25, 0.5, 1, respectively.
+      if (machineType == "e2-micro") {
+        vcpu = 0.25;
+      } else if (machineType == "e2-small") {
+        vcpu = 0.5;
+      } else if (machineType == "e2-medium") {
+        vcpu = 1;
+      }
+
       const memory = toInteger(row["memory"]);
       const prices = formatCostMap(
         (row.price ?? row["on-demand"])?.priceByRegion,

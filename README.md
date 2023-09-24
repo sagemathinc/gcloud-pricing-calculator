@@ -2,10 +2,13 @@
 
 ---
 
-This is a node.js library that downloads and parses the website https://cloud.google.com/compute/vm-instance-pricing and several other public data sources form Google, then makes it possibly to very quickly use all of that data from Javascript.  
-**It also takes into account that the spot prices at https://cloud.google.com/compute/vm-instance-pricing are mostly very wrong**, and instead pulls spot prices from https://cloud.google.com/spot-vms/pricing.
+This is a node.js library that downloads and parses the website [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) and several other public data sources form Google, then makes it possibly to very quickly use all of that data from Javascript.
 
-WARNING: Don't use this for trying to find the spot price of A100's.
+**It also takes into account that the spot prices at** [**https://cloud.google.com/compute/vm\-instance\-pricing**](https://cloud.google.com/compute/vm-instance-pricing) **are mostly very wrong**, and instead pulls spot prices from [https://cloud.google.com/spot\-vms/pricing](https://cloud.google.com/spot-vms/pricing).
+
+Finally, it includes some by hand tables of pricing for A100's and some other adjustments that I tedious created _by hand_ by entering machine configurations into Google Cloud.
+
+_**CAVEAT: Obviously don't trust anything here.**_    I made this.  I'm using it.  And I made it public and open source.  However, this very much comes with absolutely not guarantees!  Buyer beware, literally.   All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute!  See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator) 
 
 ```sh
 pnpm install @cocalc/gcloud-pricing-calculator
@@ -79,13 +82,15 @@ prices: {region to price in dollars per hour}
 
 We don't include any other information about disk or snapshot prices. If you need that, see the code in lib/disk-pricing.
 
-## Warning
+## Warnings
 
 See note below about spot instance pricing for GPU's, which is clearly wrong on Google's pricing page. I've manually corrected this in the output of getData, with what might be a significant overestimate.
 
 Also, your prices can be different than the published rates, e.g., if Google has a special negotiated rate with you.
 
 This package is public and MIT licensed and anybody can use it, but I only care about my personal application to https://cocalc.com. If you need more, [send a pull request!](https://github.com/sagemathinc/gcloud-pricing-calculator)
+
+Another warning is that this updates date once per day by default.  However, Google might update their pricing in the middle of a day, and for some part of that day this will be wrong.  There's no way around that really.  There is a [closed google group](https://groups.google.com/g/gce-spot-pricing-announcements/) that you can request to join which posts updates to spot pricing a few days in advance; I wish there were an api endpoint that returned "next known date when spot prices will change"...
 
 ## Related Official Google Pages
 
@@ -114,38 +119,4 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
-
-# New approach using New Cloud Pricing API
-
-I thought about using this api, but it's massively slower than just using the aggregate data from [https://www.gstatic.com/cloud\-site\-ux/pricing/data/gcp\-compute.json](https://www.gstatic.com/cloud-site-ux/pricing/data/gcp-compute.json) , and it is also wrong in the same ways.
-
----
-
-- [https://cloud.google.com/blog/topics/cost\-management/how\-to\-use\-the\-new\-pricing\-api](https://cloud.google.com/blog/topics/cost-management/how-to-use-the-new-pricing-api)
-- https://cloud.google.com/billing/docs/how-to/get-pricing-information-api
-- https://cloud.google.com/skus
-
-This URL to enable billing api in the project:
-
-```
-https://console.cloud.google.com/apis/enableflow?apiid=cloudbilling.googleapis.com&authuser=0&project=your_project_id
-```
-
-Get API key:
-
-```
-https://console.cloud.google.com/apis/credentials?authuser=1
-```
-
-Get data:
-
-```
-curl -X GET https://cloudbilling.googleapis.com/v2beta/services?key=$API_KEY&filter="name:services/6F81-5844-456A"
-
-curl -X get https://cloudbilling.googleapis.com/v2beta/services/6F81-5844-456A?key=$API_KEY
-
-
-curl -X GET  https://cloudbilling.googleapis.com/v2beta/skus/EDA0-3A70-3138/price?key=$API_KEY
-curl -X GET https://cloudbilling.googleapis.com/v1beta/skus/DD90-547C-2AAA/price?key=$API_KEY
-```
 

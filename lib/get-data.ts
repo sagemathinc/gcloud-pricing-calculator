@@ -1,9 +1,7 @@
-import {
-  parsePricingData,
-  machineTypeToPriceData,
-} from "./parse-pricing";
+import { parsePricingData, machineTypeToPriceData } from "./parse-pricing";
 import cacache from "cacache";
 import { join } from "path";
+import handEdit from "./hand-edit";
 import debug from "debug";
 
 const log = debug("gcloud-info");
@@ -32,6 +30,7 @@ async function updateData() {
   log("parsing data");
   const raw = await parsePricingData();
   const data = machineTypeToPriceData(raw);
+  handEdit(data);
   await cacache.put(
     cachePath,
     "data",
