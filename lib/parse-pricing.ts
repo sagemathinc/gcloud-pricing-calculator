@@ -174,9 +174,6 @@ export function machineTypeToPriceData({
         row[headings[j]] = cells[j];
       }
       const machineType = row.machine.split(" ")[0];
-      if (machineType.startsWith("e2-micro")) {
-        console.log(row);
-      }
       let vcpu = toInteger(row.virtual ?? row.vcpu ?? row.vcpus);
 
       // There's a special case with pricing for the shared cpu cases, which are
