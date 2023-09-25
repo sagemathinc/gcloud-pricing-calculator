@@ -4,7 +4,7 @@ export default function handEdit(data) {
 }
 
 function includeGpuData(data) {
-  data.accelerators["nvidia-a100-40gb"] = {
+  data.accelerators["nvidia-tesla-a100"] = {
     count: 1,
     max: 16,
     memory: 40,
@@ -31,8 +31,8 @@ function includeGpuData(data) {
     // @ts-ignore
     machineType: "a2-highgpu-1g",
   };
-  data.accelerators["nvidia-a100-40gb"].spot = sixtyPercentOff(
-    data.accelerators["nvidia-a100-40gb"].prices,
+  data.accelerators["nvidia-tesla-a100"].spot = sixtyPercentOff(
+    data.accelerators["nvidia-tesla-a100"].prices,
   );
   data.accelerators["nvidia-a100-80gb"] = {
     count: 1,
@@ -52,7 +52,10 @@ function includeGpuData(data) {
   data.accelerators["nvidia-a100-80gb"].spot = sixtyPercentOff(
     data.accelerators["nvidia-a100-80gb"].prices,
   );
-  delete data.accelerators["nvidia-k80"];
+
+  // Remove this, because it is deprecated anyways.
+  delete data.accelerators["nvidia-tesla-k80"];
+
   for (const key in data.accelerators) {
     // @ts-ignore
     if (data.accelerators[key].machineType == null) {
@@ -61,7 +64,7 @@ function includeGpuData(data) {
     }
   }
 
-  for (const machineType of ["nvidia-a100-40gb", "nvidia-a100-80gb"]) {
+  for (const machineType of ["nvidia-tesla-a100", "nvidia-a100-80gb"]) {
     for (const zone in data.accelerators[machineType].prices) {
       if (!data.zones[zone].machineTypes.includes("a2")) {
         data.zones[zone].machineTypes.push("a2");

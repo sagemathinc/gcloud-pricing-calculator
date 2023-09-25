@@ -208,7 +208,7 @@ export function machineTypeToPriceData({
   const accelerators: { [acceleratorType: string]: PriceData } = {};
   for (const name in gpus) {
     const d = gpus[name];
-    accelerators[name.toLowerCase().replace(" ", "-")] = {
+    accelerators[toApiAcceleratorType(name)] = {
       ...d,
       prices: formatCostMap(d.prices),
       spot: formatCostMap(d.spot),
@@ -239,4 +239,13 @@ function spotPrice({ spotData, machineType, vcpu, memory, regions }) {
     x[region] = data.vcpu[region] * vcpu + data.memory[region] * memory;
   }
   return x;
+}
+
+// In scraping data we use the names in the data sources.
+// However, we want to instead use exactly the same names
+// as in the GCP API. The possibilities for name here are
+//   'NVIDIA T4', 'NVIDIA P4', 'NVIDIA V100', 'NVIDIA P100', 'NVIDIA K80',
+function toApiAcceleratorType(name: string): string {
+  const family = name.split(" ")[1].toLowerCase();
+  return `nvidia-tesla-${family}`;
 }
