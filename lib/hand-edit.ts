@@ -168,6 +168,8 @@ function includeGpuData(data) {
       }
     }
   }
+
+  changeGPURegionPricesToZonePrices(data);
 }
 
 // GPU's are in high demand, so as of Sept 25, 2023, Google
@@ -198,4 +200,38 @@ function removeIncompleteMachineTypes(data) {
       delete data.machineTypes[machineType];
     }
   }
+}
+
+function changeGPURegionPricesToZonePrices(data) {
+  // I just manually copy/pasted this from https://cloud.google.com/compute/docs/gpus/gpu-regions-zones
+  // Someday as google expands this list will grow, perhaps, though maybe not, since these are all
+  // old GPU's and they add new ones.
+  const ACCELERATOR_TO_ZONES = {
+    "nvidia-tesla-t4":
+      "asia-east1-a asia-east1-c asia-east2-a asia-east2-c asia-northeast1-a asia-northeast1-c asia-northeast3-b asia-northeast3-c asia-south1-a asia-south1-b asia-southeast1-a asia-southeast1-b asia-southeast1-c asia-southeast2-a asia-southeast2-b australia-southeast1-a australia-southeast1-c europe-central2-b europe-central2-c europe-west1-b europe-west1-c europe-west1-d europe-west2-a europe-west2-b europe-west3-b europe-west4-a europe-west4-b europe-west4-c me-west1-b me-west1-c northamerica-northeast1-c southamerica-east1-a southamerica-east1-c us-central1-a us-central1-b us-central1-c us-central1-f us-east1-c us-east1-d us-east4-a us-east4-b us-east4-c us-west1-a us-west1-b us-west2-b us-west2-c us-west3-b us-west4-a us-west4-b",
+    "nvidia-tesla-v100":
+      "asia-east1-c europe-west4-a europe-west4-b europe-west4-c us-central1-a us-central1-b us-central1-c us-central1-f us-east1-c us-west1-a us-west1-b",
+    "nvidia-tesla-p100":
+      "asia-east1-a asia-east1-c australia-southeast1-c europe-west1-b europe-west1-d europe-west4-a us-central1-c us-central1-f us-east1-b us-east1-c us-west1-a us-west1-b",
+    "nvidia-tesla-p4":
+      "asia-southeast1-b asia-southeast1-c australia-southeast1-a australia-southeast1-b europe-west4-b europe-west4-c northamerica-northeast1-a northamerica-northeast1-b northamerica-northeast1-c us-central1-a us-central1-c us-east4-a us-east4-b us-east4-c us-west2-b us-west2-c",
+  };
+  for (const type in ACCELERATOR_TO_ZONES) {
+    const x = data.accelerators[type];
+    const zones = ACCELERATOR_TO_ZONES[type].split(" ");
+    x.prices = regionToZones(x.prices, zones);
+    x.spot = regionToZones(x.spot, zones);
+  }
+}
+
+function regionToZones(obj, zones) {
+  const obj2: any = {};
+  for (const region in obj) {
+    for (const zone of zones) {
+      if (zone.startsWith(region)) {
+        obj2[zone] = obj[region];
+      }
+    }
+  }
+  return obj2;
 }
