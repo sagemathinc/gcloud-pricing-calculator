@@ -65,7 +65,8 @@ function includeGpuData(data) {
     data.accelerators["nvidia-a100-80gb"].prices,
   );
 
-  // Yes, it's just 'nvidia-l4' to be doubly inconsistent with previous usage by google for naming these.
+  // Yes, it's just 'nvidia-l4' because NVidia stopped using the "Tesla" branding
+  // with the L4 series.
   data.accelerators["nvidia-l4"] = {
     count: 1,
     max: 1,
