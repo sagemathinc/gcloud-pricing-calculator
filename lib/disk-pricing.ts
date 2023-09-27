@@ -17,6 +17,7 @@ If x is the gcp-compute.json object, then:
 
    x.gcp.compute.persistent_disk.standard.capacity.storagepdcapacity.regions
    x.gcp.compute.persistent_disk.ssd.capacity.storagepdssd.regions
+   x.gcp.compute.persistent_disk.ssd.capacity.lite.storagepdssdlitecapacity.regions
 
 is a map from region name (with the dash included) to
 
@@ -42,8 +43,9 @@ We could easily add more, but this is all I need for my application.
 import { toPriceMap } from "./gcp-compute";
 
 export async function getDisks(): Promise<{
-  standard: { [region: string]: number };
-  ssd: { [region: string]: number };
+  "pd-standard": { [region: string]: number };
+  "pd-ssd": { [region: string]: number };
+  "pd-balanced": { [region: string]: number };
 }> {
   const standard = await toPriceMap(
     "gcp.compute.persistent_disk.standard.capacity.storagepdcapacity",
@@ -53,6 +55,14 @@ export async function getDisks(): Promise<{
     "gcp.compute.persistent_disk.ssd.capacity.storagepdssd",
     1 / 730,
   );
+  const balanced = await toPriceMap(
+    "gcp.compute.persistent_disk.ssd.capacity.lite.storagepdssdlitecapacity",
+    1 / 730,
+  );
 
-  return { standard, ssd };
+  return {
+    "pd-standard": standard,
+    "pd-balanced": balanced,
+    "pd-ssd": ssd,
+  };
 }
