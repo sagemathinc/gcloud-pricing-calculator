@@ -8,7 +8,7 @@ This is a node.js library that downloads and parses the website [https://cloud.g
 
 Finally, it includes some by hand tables of pricing for A100's and some other adjustments that I tedious created _by hand_ by entering machine configurations into Google Cloud.
 
-_**CAVEAT: Obviously don't trust anything here.**_    I made this.  I'm using it.  And I made it public and open source.  However, this very much comes with absolutely not guarantees!  Buyer beware, literally.   All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute!  See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator) 
+_**CAVEAT: Obviously don't trust anything here.**_ I made this. I'm using it. And I made it public and open source. However, this very much comes with absolutely not guarantees! Buyer beware, literally. All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute! See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator)
 
 ```sh
 pnpm install @cocalc/gcloud-pricing-calculator
@@ -88,9 +88,9 @@ See note below about spot instance pricing for GPU's, which is clearly wrong on 
 
 Also, your prices can be different than the published rates, e.g., if Google has a special negotiated rate with you.
 
-This package is public and MIT licensed and anybody can use it, but I only care about my personal application to https://cocalc.com. If you need more, [send a pull request!](https://github.com/sagemathinc/gcloud-pricing-calculator)
+This package is AGPL + non-commercial clause licensed. If you want to use it in a product, contact us for a commercial license (help@cocalc.com).
 
-Another warning is that this updates date once per day by default.  However, Google might update their pricing in the middle of a day, and for some part of that day this will be wrong.  There's no way around that really.  There is a [closed google group](https://groups.google.com/g/gce-spot-pricing-announcements/) that you can request to join which posts updates to spot pricing a few days in advance; I wish there were an api endpoint that returned "next known date when spot prices will change"...
+Another warning is that this updates date once per day by default. However, Google might update their pricing in the middle of a day, and for some part of that day this will be wrong. There's no way around that really. There is a [closed google group](https://groups.google.com/g/gce-spot-pricing-announcements/) that you can request to join which posts updates to spot pricing a few days in advance; I wish there were an api endpoint that returned "next known date when spot prices will change"...
 
 ## Related Official Google Pages
 
@@ -119,4 +119,3 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
-

@@ -9,11 +9,7 @@
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules"
   },
-  "files": [
-    "dist/**",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist/**", "README.md", "package.json"],
   "engines": {
     "node": ">=0.18.0"
   },
@@ -27,11 +23,8 @@
     "cheerio": "1.0.0-rc.12",
     "debug": "^4.3.4"
   },
-  "keywords": [
-    "google",
-    "cloud"
-  ],
-  "license": "MIT",
+  "keywords": ["google", "cloud"],
+  "license": "AGPL noncommercial -- SEE LICENSE.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/sagemathinc/gcloud-pricing-calculator.git"
