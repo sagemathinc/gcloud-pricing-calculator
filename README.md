@@ -2,13 +2,35 @@
 
 ---
 
-This is a node.js library that downloads and parses the website [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) and several other public data sources form Google, then makes it possibly to very quickly use all of that data from Javascript.
+This is a node.js library that downloads and parses the website [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) and several other public data sources form Google, and also includes a copy of some of the official SKU pricing list, parses everything, makes a range of automatic and manual changes, then makes it possibly to very quickly use all of that data from Javascript.
 
 **It also takes into account that the spot prices at** [**https://cloud.google.com/compute/vm\-instance\-pricing**](https://cloud.google.com/compute/vm-instance-pricing) **are mostly very wrong**, and instead pulls spot prices from [https://cloud.google.com/spot\-vms/pricing](https://cloud.google.com/spot-vms/pricing).
 
-Finally, it includes some by hand tables of pricing for A100's and some other adjustments that I tedious created _by hand_ by entering machine configurations into Google Cloud. There's a GPU table at [https://cloud.google.com/compute/gpus\-pricing](https://cloud.google.com/compute/gpus-pricing) 
+Finally, it includes some by hand tables of pricing for A100's and some other adjustments that I tedious created _by hand_ by entering machine configurations into Google Cloud. There's a GPU table at [https://cloud.google.com/compute/gpus\-pricing](https://cloud.google.com/compute/gpus-pricing) .  It then tries to use the SKU data to correct all of these prices.
 
-_**CAVEAT: Obviously don't trust anything here.**_    I made this.  I'm using it.  And I made it public and open source.  However, this very much comes with absolutely not guarantees!  Buyer beware, literally.   All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute!  See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator) 
+_**CAVEAT: Obviously don't trust anything here.**_    I made this.  I'm using it.  And I made it public, though under a **non\-commercial license**.  This very much comes with absolutely not guarantees!  Buyer beware, literally.   All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute!  See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator) 
+
+CAVEAT: Don't trust the official public google priing pages either.  They have numerous significant mistakes where pricing is off by potentially thousands of dollars.   However, the actual SKU pricing data seems to be what they actually charge.    E.g., in Singapore the price per month for a `m1-ultramem-40` VM with 961GB of RAM  [is listed here](https://cloud.google.com/compute/vm-instance-pricing) as \$10814.95, but in reality the price is \$5,411.74 \(roughly a factor of 2\).   This is not a spot instance.  Here are some examples where Google's publicly posted prices are off by at least 10% from what they actually charge.
+
+```
+ 'n1-highcpu-2' in 'asia-southeast2' : diff=0.017971232000000004, published=0.0773, actual=0.095271232
+ 'n1-highcpu-4' in 'asia-southeast2' : diff=0.03594246400000001, published=0.1546, actual=0.190542464
+ 'n1-highcpu-8' in 'asia-southeast2' : diff=0.071984928, published=0.3091, actual=0.381084928
+ 'n1-highcpu-16' in 'asia-southeast2' : diff=0.143969856, published=0.6182, actual=0.762169856
+ 'n1-highcpu-32' in 'asia-southeast2' : diff=0.287839712, published=1.2365, actual=1.524339712
+ 'n1-highcpu-64' in 'asia-southeast2' : diff=0.575679424, published=2.473, actual=3.048679424
+ 'n1-highcpu-96' in 'asia-southeast2' : diff=0.864819135999999, published=3.7082, actual=4.573019135999999
+ 'm1-ultramem-40' in 'europe-central2' : diff=-6.61655305, published=14.352, actual=7.73544695
+ 'm1-ultramem-40' in 'asia-southeast1' : diff=-7.412999999999999, published=14.815, actual=7.402
+ 'm1-ultramem-80' in 'europe-central2' : diff=-13.2331061, published=28.704, actual=15.4708939
+ 'm1-ultramem-80' in 'asia-southeast1' : diff=-14.827, published=29.631, actual=14.804
+ 'm1-ultramem-160' in 'europe-central2' : diff=-26.4662122, published=57.408, actual=30.9417878
+ 'm1-ultramem-160' in 'asia-southeast1' : diff=-29.653000000000002, published=59.261, actual=29.608
+ 'm1-megamem-96' in 'asia-southeast1' : diff=-12.547, published=25.075, actual=12.527999999999999
+ 'm1-megamem-96' in 'europe-west6' : diff=-13.091975999999999, published=28.005, actual=14.913024
+```
+
+Here is how to use this library:
 
 ```sh
 pnpm install @cocalc/gcloud-pricing-calculator

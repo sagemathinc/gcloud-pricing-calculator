@@ -188,7 +188,9 @@ export function machineTypeToPriceData({
         vcpu = 1;
       }
 
-      const memory = toInteger(row["memory"]);
+      // VERY important to get the actual amount of memory, and not just round to an integer
+      // since we will use this later when recomputing all the prices based on the SKU data!
+      const memory = parseFloat(row["memory"]);
       const prices = formatCostMap(
         (row.price ?? row["on-demand"])?.priceByRegion,
       );

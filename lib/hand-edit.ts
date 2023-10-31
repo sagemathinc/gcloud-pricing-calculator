@@ -11,14 +11,15 @@ the csv data file of pricing I downloaded manually from the cloud console
 to then replace the prices with official prices.
 */
 
-import { updatePricing } from "./csv-data";
+import { updateAcceleratorPricing, updateMachineTypePricing } from "./csv-data";
 
 export default async function handEdit(data) {
-  await includeGpuData(data);
+  await updateGpuData(data);
   removeIncompleteMachineTypes(data);
+  await updateMachineTypeData(data);
 }
 
-async function includeGpuData(data) {
+async function updateGpuData(data) {
   // A100 40GB
   data.accelerators["nvidia-tesla-a100"] = {
     count: 1,
@@ -47,7 +48,7 @@ async function includeGpuData(data) {
     // @ts-ignore
     machineType: "a2-highgpu-1g",
   };
-  await updatePricing(
+  await updateAcceleratorPricing(
     "Nvidia Tesla A100 GPU",
     data.accelerators["nvidia-tesla-a100"].prices,
   );
@@ -55,7 +56,7 @@ async function includeGpuData(data) {
   data.accelerators["nvidia-tesla-a100"].spot = sixtyPercentOff(
     data.accelerators["nvidia-tesla-a100"].prices,
   );
-  await updatePricing(
+  await updateAcceleratorPricing(
     "Nvidia Tesla A100 GPU attached to Spot Preemptible VMs",
     data.accelerators["nvidia-tesla-a100"].spot,
   );
@@ -76,14 +77,14 @@ async function includeGpuData(data) {
     // @ts-ignore
     machineType: "a2-ultragpu-1g",
   };
-  await updatePricing(
+  await updateAcceleratorPricing(
     "Nvidia Tesla A100 80GB GPU",
     data.accelerators["nvidia-a100-80gb"].prices,
   );
   data.accelerators["nvidia-a100-80gb"].spot = sixtyPercentOff(
     data.accelerators["nvidia-a100-80gb"].prices,
   );
-  await updatePricing(
+  await updateAcceleratorPricing(
     "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs",
     data.accelerators["nvidia-a100-80gb"].spot,
   );
@@ -125,8 +126,11 @@ async function includeGpuData(data) {
     data.accelerators["nvidia-l4"].prices,
   );
   try {
-    await updatePricing("Nvidia L4 GPU", data.accelerators["nvidia-l4"].prices);
-    await updatePricing(
+    await updateAcceleratorPricing(
+      "Nvidia L4 GPU",
+      data.accelerators["nvidia-l4"].prices,
+    );
+    await updateAcceleratorPricing(
       "Nvidia L4 GPU attached to Spot Preemptible VMs",
       data.accelerators["nvidia-l4"].spot,
     );
@@ -147,8 +151,11 @@ async function includeGpuData(data) {
       delete data.accelerators["nvidia-l4"].spot[zone];
       delete data.accelerators["nvidia-l4"].prices[zone];
     }
-    await updatePricing("Nvidia L4 GPU", data.accelerators["nvidia-l4"].prices);
-    await updatePricing(
+    await updateAcceleratorPricing(
+      "Nvidia L4 GPU",
+      data.accelerators["nvidia-l4"].prices,
+    );
+    await updateAcceleratorPricing(
       "Nvidia L4 GPU attached to Spot Preemptible VMs",
       data.accelerators["nvidia-l4"].spot,
     );
@@ -209,8 +216,8 @@ async function includeGpuData(data) {
   ]) {
     const label = type.split("-")[2].toUpperCase();
     const desc = `Nvidia Tesla ${label} GPU`;
-    await updatePricing(desc, data.accelerators[type].prices);
-    await updatePricing(
+    await updateAcceleratorPricing(desc, data.accelerators[type].prices);
+    await updateAcceleratorPricing(
       desc + " attached to Spot Preemptible VMs",
       data.accelerators[type].spot,
     );
@@ -274,4 +281,17 @@ function regionToZones(obj, zones) {
     }
   }
   return obj2;
+}
+
+async function updateMachineTypeData(data) {
+  for (const machineType in data.machineTypes) {
+    try {
+      await updateMachineTypePricing(
+        machineType,
+        data.machineTypes[machineType],
+      );
+    } catch (err) {
+      console.warn(`issue with ${machineType} -- ${err}`);
+    }
+  }
 }
