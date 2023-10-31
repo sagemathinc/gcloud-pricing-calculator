@@ -5,12 +5,18 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  awaiting:
+    specifier: ^3.0.0
+    version: 3.0.0
   cacache:
     specifier: ^18.0.0
     version: 18.0.0
   cheerio:
     specifier: 1.0.0-rc.12
     version: 1.0.0-rc.12
+  csv-parse:
+    specifier: ^5.5.2
+    version: 5.5.2
   debug:
     specifier: ^4.3.4
     version: 4.3.4
@@ -810,6 +816,11 @@ packages:
       sprintf-js: 1.0.3
     dev: true
 
+  /awaiting@3.0.0:
+    resolution: {integrity: sha512-19i4G7Hjxj9idgMlAM0BTRII8HfvsOdlr4D9cf3Dm1MZhvcKjBpzY8AMNEyIKyi+L9TIK15xZatmdcPG003yww==}
+    engines: {node: '>=7.6.x'}
+    dev: false
+
   /babel-jest@29.6.4(@babel/core@7.22.17):
     resolution: {integrity: sha512-meLj23UlSLddj6PC+YTOFRgDAtjnZom8w/ACsrx0gtPtv5cJZk0A5Unk5bV4wixD7XaPCN1fQvpww8czkZURmw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -1102,6 +1113,10 @@ packages:
   /css-what@6.1.0:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
+    dev: false
+
+  /csv-parse@5.5.2:
+    resolution: {integrity: sha512-YRVtvdtUNXZCMyK5zd5Wty1W6dNTpGKdqQd4EQ8tl/c6KW1aMBB1Kg1ppky5FONKmEqGJ/8WjLlTNLPne4ioVA==}
     dev: false
 
   /debug@4.3.4:

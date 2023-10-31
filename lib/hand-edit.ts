@@ -1,20 +1,25 @@
 /*
-Mostly this file involves VERY TEDIOUSLY (and hopefully not error prone)
+I VERY TEDIOUSLY (and hopefully not error prone)
 enter machine configuration into the GCP web console, and seeing what the
 price quotes are.  There doesn't seem to be reliable pricing data anywhere
 that I can find for 40GB A100's, 80GB A100's, and tensor core L4's, since
-maybe they are all just very new.
+maybe they are all just very new, or at least finding exactly where
+these are available in all cases.
 
-Very likely the prices for spot are (or will soon be) all exactly 60% off,
-i.e., the minimum, due to strong demand, so I'm just assuming that here.
+What I've done here is manually copy the zones and prices, *then* used
+the csv data file of pricing I downloaded manually from the cloud console
+to then replace the prices with official prices.
 */
 
-export default function handEdit(data) {
-  includeGpuData(data);
+import { updatePricing } from "./csv-data";
+
+export default async function handEdit(data) {
+  await includeGpuData(data);
   removeIncompleteMachineTypes(data);
 }
 
-function includeGpuData(data) {
+async function includeGpuData(data) {
+  // A100 40GB
   data.accelerators["nvidia-tesla-a100"] = {
     count: 1,
     max: 16,
@@ -42,10 +47,20 @@ function includeGpuData(data) {
     // @ts-ignore
     machineType: "a2-highgpu-1g",
   };
-  data.accelerators["nvidia-tesla-a100"].spot = sixtyPercentOff(
+  await updatePricing(
+    "Nvidia Tesla A100 GPU",
     data.accelerators["nvidia-tesla-a100"].prices,
   );
 
+  data.accelerators["nvidia-tesla-a100"].spot = sixtyPercentOff(
+    data.accelerators["nvidia-tesla-a100"].prices,
+  );
+  await updatePricing(
+    "Nvidia Tesla A100 GPU attached to Spot Preemptible VMs",
+    data.accelerators["nvidia-tesla-a100"].spot,
+  );
+
+  // A100 80GB
   data.accelerators["nvidia-a100-80gb"] = {
     count: 1,
     max: 8,
@@ -61,8 +76,16 @@ function includeGpuData(data) {
     // @ts-ignore
     machineType: "a2-ultragpu-1g",
   };
+  await updatePricing(
+    "Nvidia Tesla A100 80GB GPU",
+    data.accelerators["nvidia-a100-80gb"].prices,
+  );
   data.accelerators["nvidia-a100-80gb"].spot = sixtyPercentOff(
     data.accelerators["nvidia-a100-80gb"].prices,
+  );
+  await updatePricing(
+    "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs",
+    data.accelerators["nvidia-a100-80gb"].spot,
   );
 
   // Yes, it's just 'nvidia-l4' because NVidia stopped using the "Tesla" branding
@@ -97,60 +120,64 @@ function includeGpuData(data) {
     },
     machineType: "g2",
   };
-
+  // first attempt
   data.accelerators["nvidia-l4"].spot = sixtyPercentOff(
     data.accelerators["nvidia-l4"].prices,
   );
+  try {
+    await updatePricing("Nvidia L4 GPU", data.accelerators["nvidia-l4"].prices);
+    await updatePricing(
+      "Nvidia L4 GPU attached to Spot Preemptible VMs",
+      data.accelerators["nvidia-l4"].spot,
+    );
+  } catch (_) {
+    // WTF? these five zones are NOT in the csv data at all, which is VERY weird.  We looked them
+    // up using the cloud console.  They are amazingly important super good deals in the best places!
+    // We first delete them, so update works, then write them below.
+    const MISSING_L4_ZONES = [
+      "us-west1-a",
+      "us-west1-b",
+      "us-west1-c",
+      "us-east1-b",
+      "us-east1-d",
+    ];
+    const MISSING_PRICE = 408.83 / 730;
+    const MISSING_SPOT_PRICE = 122.65 / 730;
+    for (const zone of MISSING_L4_ZONES) {
+      delete data.accelerators["nvidia-l4"].spot[zone];
+      delete data.accelerators["nvidia-l4"].prices[zone];
+    }
+    await updatePricing("Nvidia L4 GPU", data.accelerators["nvidia-l4"].prices);
+    await updatePricing(
+      "Nvidia L4 GPU attached to Spot Preemptible VMs",
+      data.accelerators["nvidia-l4"].spot,
+    );
+    for (const zone of MISSING_L4_ZONES) {
+      data.accelerators["nvidia-l4"].prices[zone] = MISSING_PRICE;
+      data.accelerators["nvidia-l4"].spot[zone] = MISSING_SPOT_PRICE;
+    }
+  }
 
   // So I'm using a made up name for count=2, 4, 8, and you'll have
   // to fix this in your API calls.
-  data.accelerators["nvidia-l4-x2"] = {
-    count: 2,
-    max: 2,
-    memory: 24,
-    machineType: "g2-standard-24",
-  };
+  for (const n of [2, 4, 8]) {
+    data.accelerators[`nvidia-l4-x${n}`] = {
+      count: n,
+      max: n,
+      memory: 12 * n,
+      machineType: `g2-standard-${12 * n}`,
+    };
+    data.accelerators[`nvidia-l4-x${n}`].prices = scalePrices(
+      data.accelerators["nvidia-l4"].prices,
+      n,
+    );
+    data.accelerators[`nvidia-l4-x${n}`].spot = scalePrices(
+      data.accelerators["nvidia-l4"].spot,
+      n,
+    );
+  }
 
-  data.accelerators["nvidia-l4-x2"].prices = scalePrices(
-    data.accelerators["nvidia-l4"].prices,
-    2,
-  );
-  data.accelerators["nvidia-l4-x2"].spot = sixtyPercentOff(
-    data.accelerators["nvidia-l4-x2"].prices,
-  );
-
-  data.accelerators["nvidia-l4-x4"] = {
-    count: 4,
-    max: 4,
-    memory: 24,
-    prices: {},
-    machineType: "g2-standard-48",
-  };
-  data.accelerators["nvidia-l4-x4"].prices = scalePrices(
-    data.accelerators["nvidia-l4"].prices,
-    4,
-  );
-
-  data.accelerators["nvidia-l4-x4"].spot = sixtyPercentOff(
-    data.accelerators["nvidia-l4-x4"].prices,
-  );
-
-  data.accelerators["nvidia-l4-x8"] = {
-    count: 8,
-    max: 8,
-    memory: 24,
-    prices: {},
-    machineType: "g2-standard-96",
-  };
-  data.accelerators["nvidia-l4-x8"].prices = scalePrices(
-    data.accelerators["nvidia-l4"].prices,
-    8,
-  );
-  data.accelerators["nvidia-l4-x8"].spot = sixtyPercentOff(
-    data.accelerators["nvidia-l4-x8"].prices,
-  );
-
-  // Remove this, because it is deprecated anyways.
+  // Remove K80 data, because it is deprecated anyways (and wrong)
   delete data.accelerators["nvidia-tesla-k80"];
 
   for (const key in data.accelerators) {
@@ -170,15 +197,28 @@ function includeGpuData(data) {
   }
 
   changeGPURegionPricesToZonePrices(data);
+
+  // Use the csv data to update as many of the other GPU's (not L4 or A100)
+  // that we can, instead of depending on old scraped data.
+
+  for (const type of [
+    "nvidia-tesla-t4",
+    "nvidia-tesla-v100",
+    "nvidia-tesla-p100",
+    "nvidia-tesla-p4",
+  ]) {
+    const label = type.split("-")[2].toUpperCase();
+    const desc = `Nvidia Tesla ${label} GPU`;
+    await updatePricing(desc, data.accelerators[type].prices);
+    await updatePricing(
+      desc + " attached to Spot Preemptible VMs",
+      data.accelerators[type].spot,
+    );
+  }
 }
 
-// GPU's are in high demand, so as of Sept 25, 2023, Google
-// just went to the worst possible spot instance discounts for them.
-// Since we have a little trouble to get reliable data for spot A100's directly from
-// google api's, we just use this (which is safe) for a100's.
-// Of course a100 spot instances aren't often available!
 function sixtyPercentOff(obj) {
-  return scalePrices(obj, 0.6);
+  return scalePrices(obj, 0.4);
 }
 
 function scalePrices(obj, scale) {

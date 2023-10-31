@@ -30,7 +30,7 @@ async function updateData() {
   log("parsing data");
   const raw = await parsePricingData();
   const data = machineTypeToPriceData(raw);
-  handEdit(data);
+  await handEdit(data);
   await cacache.put(
     cachePath,
     "data",

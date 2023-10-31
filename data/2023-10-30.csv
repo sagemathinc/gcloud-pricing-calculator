@@ -1,3 +1,4 @@
+Google service,Service description,Service ID,SKU ID,SKU description,Product taxonomy,Unit description,Per unit quantity,Tiered usage start,List price ($),
 GCP,Compute Engine,6F81-5844-456A,1599-A2EA-2B54,On-demand fee for total VM network bandwidth up to 100 Gbps in Johannesburg,GCP > Compute > GCE > VMs On Demand > Advanced Networking,hour,1,0,1.17445,
 GCP,Compute Engine,6F81-5844-456A,0F56-9CF7-3DB3,On-demand fee for total VM network bandwidth up to 100 Gbps in Taiwan,GCP > Compute > GCE > VMs On Demand > Advanced Networking,hour,1,0,1.03968,
 GCP,Compute Engine,6F81-5844-456A,0749-2E54-AE81,On-demand fee for total VM network bandwidth up to 100 Gbps in Hong Kong,GCP > Compute > GCE > VMs On Demand > Advanced Networking,hour,1,0,1.25607,

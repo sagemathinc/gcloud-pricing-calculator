@@ -58,7 +58,11 @@ async function parsePricingData() {
   return data;
 }
 
+let _zoneData: null | { [zone: string]: ZoneData } = null;
 export async function getZones(): Promise<{ [zone: string]: ZoneData }> {
+  if (_zoneData != null) {
+    return _zoneData;
+  }
   const data = await parsePricingData();
   const zoneData: { [zone: string]: ZoneData } = {};
   for (const x of data) {
@@ -71,5 +75,6 @@ export async function getZones(): Promise<{ [zone: string]: ZoneData }> {
     const gpus = !!x["Resources"];
     zoneData[x.Zones] = { machineTypes, location, lowC02, gpus };
   }
+  _zoneData = zoneData;
   return zoneData;
 }
