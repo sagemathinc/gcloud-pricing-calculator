@@ -9,11 +9,7 @@
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules"
   },
-  "files": [
-    "dist/**",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist/**", "README.md", "package.json"],
   "engines": {
     "node": ">=0.18.0"
   },
@@ -29,10 +25,7 @@
     "csv-parse": "^5.5.2",
     "debug": "^4.3.4"
   },
-  "keywords": [
-    "google",
-    "cloud"
-  ],
+  "keywords": ["google", "cloud"],
   "license": "AGPL noncommercial -- SEE LICENSE.md",
   "repository": {
     "type": "git",
@@ -42,9 +35,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.3",
     "@types/node": "^20.5.0",
-    "jest": "^29.6.2",
     "prettier": "^3.0.2",
     "typescript": "^5.1.6"
   }
