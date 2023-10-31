@@ -17,6 +17,7 @@ If x is the gcp-compute.json object, then:
 
    x.gcp.compute.persistent_disk.standard.capacity.storagepdcapacity.regions
    x.gcp.compute.persistent_disk.ssd.capacity.storagepdssd.regions
+   x.gcp.compute.persistent_disk.ssd.capacity.storagelocalssd.regions
    x.gcp.compute.persistent_disk.ssd.capacity.lite.storagepdssdlitecapacity.regions
 
 is a map from region name (with the dash included) to
@@ -39,20 +40,27 @@ We can thus easily get some additional keys for our raw pricing object:
 
 We could easily add more, but this is all I need for my application.
 */
-
+import type { PriceData } from "./parse-pricing";
 import { toPriceMap } from "./gcp-compute";
 
-export async function getDisks(): Promise<{
-  "pd-standard": { [region: string]: number };
-  "pd-ssd": { [region: string]: number };
-  "pd-balanced": { [region: string]: number };
-}> {
+export interface DiskData {
+  "pd-standard": PriceData;
+  "pd-ssd": PriceData;
+  "pd-balanced": PriceData;
+  "local-ssd": PriceData;
+}
+
+export async function getDisks(): Promise<DiskData> {
   const standard = await toPriceMap(
     "gcp.compute.persistent_disk.standard.capacity.storagepdcapacity",
     1 / 730,
   );
   const ssd = await toPriceMap(
     "gcp.compute.persistent_disk.ssd.capacity.storagepdssd",
+    1 / 730,
+  );
+  const localSsd = await toPriceMap(
+    "gcp.compute.local_ssd.on_demand.storagelocalssd",
     1 / 730,
   );
   const balanced = await toPriceMap(
@@ -64,5 +72,6 @@ export async function getDisks(): Promise<{
     "pd-standard": standard,
     "pd-balanced": balanced,
     "pd-ssd": ssd,
+    "local-ssd": localSsd,
   };
 }

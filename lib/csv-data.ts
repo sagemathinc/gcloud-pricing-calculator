@@ -4,6 +4,7 @@ import { callback } from "awaiting";
 import { join } from "path";
 import { getZones } from "./zones";
 import type { PriceData } from "./parse-pricing";
+import type { DiskData } from "./disk-pricing";
 
 interface SKUData {
   "SKU ID": string;
@@ -64,17 +65,22 @@ export async function parsedCsvData() {
     } else {
       families[family].push(sku);
     }
-    const v = sku["SKU description"].split("running in");
+    let v = sku["SKU description"].split("running in");
     if (v.length < 2) {
       // we only need data about running items, e.g., CPU's and GPU's
-      continue;
+      // actually also local ssd
+      if (sku["SKU description"].includes("SSD backed Local Storage")) {
+        v = sku["SKU description"].split(" in ");
+      } else {
+        continue;
+      }
     }
     const desc = v[0].trim();
     let z = parsed[desc];
     if (z == null) {
       z = parsed[desc] = {};
     }
-    z[v[1].trim()] = sku;
+    z[(v[1] ?? "").trim()] = sku;
   }
   return { parsed, families };
 }
@@ -126,6 +132,10 @@ export async function getPrice({
     if (skus[loc] != null) {
       return parseFloat(skus[loc]["List price ($)"]);
     }
+  }
+  if (skus[""] != null) {
+    // local ssd have '' as global location fallback
+    return parseFloat(skus[""]["List price ($)"]);
   }
   throw Error(
     `unable to find SKU with location '${location}' (did find description)`,
@@ -289,7 +299,7 @@ export async function updateMachineTypePricing(
   }
 }
 
-function getZone(region: string, zoneData) {
+export function getZone(region: string, zoneData) {
   for (const x of ["a", "b", "c", "d", "e", "f", "g", "h", "i"]) {
     const zone = region + "-" + x;
     if (zoneData[zone] != null) {
@@ -302,4 +312,41 @@ function getZone(region: string, zoneData) {
 function toAscii(str: string): string {
   const combining = /[\u0300-\u036F]/g;
   return str.normalize("NFKD").replace(combining, "");
+}
+
+// mutates disk data, making it same as what is in the csv SKU data,
+// and filling in spot pricing.
+// TODO: we do not actually check any prices with csv sku except for local ssd.
+export async function updateDiskPricing(data: DiskData) {
+  const desc = "SSD backed Local Storage";
+  const spotDesc = `${desc} attached to Spot Preemptible VMs`;
+  const zoneData = await getZones();
+
+  // local ssd prices
+  const spot: { [region: string]: number } = {};
+  data["local-ssd"].spot = spot;
+  for (const region in data["local-ssd"].prices) {
+    let zone;
+    try {
+      zone = getZone(region, zoneData);
+    } catch (_) {
+      // e.g., right now google's 'africa-south1' only half exists.
+      continue;
+    }
+    const { location } = zoneData[zone];
+    const spotPrice = (await getPrice({ desc: spotDesc, location })) / 730;
+    spot[region] = spotPrice;
+    const price = (await getPrice({ desc, location })) / 730;
+    const cur = data["local-ssd"].prices[region];
+    if (cur != price) {
+      data["local-ssd"].prices[region] = price;
+      if (Math.abs(cur - price) >= 0.01) {
+        console.log(
+          `changing local-ssd price for ${region} from ${cur} to ${price}`,
+        );
+      }
+    }
+  }
+
+
 }

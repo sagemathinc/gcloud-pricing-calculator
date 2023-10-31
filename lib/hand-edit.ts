@@ -11,12 +11,17 @@ the csv data file of pricing I downloaded manually from the cloud console
 to then replace the prices with official prices.
 */
 
-import { updateAcceleratorPricing, updateMachineTypePricing } from "./csv-data";
+import {
+  updateAcceleratorPricing,
+  updateMachineTypePricing,
+  updateDiskPricing,
+} from "./csv-data";
 
 export default async function handEdit(data) {
   await updateGpuData(data);
   removeIncompleteMachineTypes(data);
   await updateMachineTypeData(data);
+  await updateDisks(data);
 }
 
 async function updateGpuData(data) {
@@ -294,4 +299,10 @@ async function updateMachineTypeData(data) {
       console.warn(`issue with ${machineType} -- ${err}`);
     }
   }
+}
+
+// (1) make sure prices are right,
+// (2) add in the spot prices for local ssd.
+async function updateDisks(data) {
+  await updateDiskPricing(data.disks);
 }

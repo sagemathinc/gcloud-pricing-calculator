@@ -1,3 +1,5 @@
+import type { PriceData } from "./parse-pricing";
+
 let gcpComputeJson: any = null;
 
 export async function getComputeJson() {
@@ -13,7 +15,10 @@ export async function getComputeJson() {
 
 // e.g., input could be gcpComputeJson.gcp.compute.persistent_disk.standard.capacity.storagepdcapacity
 // and output would be map from region to price
-export async function toPriceMap(taxonomy: string, scale: number = 1) {
+export async function toPriceMap(
+  taxonomy: string,
+  scale: number = 1,
+): Promise<PriceData> {
   const segments = taxonomy.toLowerCase().split(".");
   let data = await getComputeJson();
   for (const segment of segments) {
