@@ -234,6 +234,43 @@ export async function getMachineTypePrice({
   );
 }
 
+// a2- and g2- machine types MUST have a one or more gpu, and the gpu
+// and number is determined by the machine type.  Here we compute the
+// contribution to the final cost of just the GPU.
+/*
+async function getRequiredGpuPrice({ machineType, spot, location }) {
+  let count;
+  let desc;
+  const i = machineType.lastIndexOf("-");
+  if (machineType.startsWith("a2-ultragpu")) {
+    // A100 80GB
+    desc = spot
+      ? "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs"
+      : "Nvidia Tesla A100 80GB GPU";
+    count = parseInt(machineType.slice(i + 1, machineType.length - 1));
+  } else if (
+    machineType.startsWith("a2-highgpu") ||
+    machineType.startsWith("a2-megagpu")
+  ) {
+    // A100 40GB
+    desc = spot
+      ? "Nvidia Tesla A100 GPU attached to Spot Preemptible VMs"
+      : "Nvidia Tesla A100 GPU";
+    count = parseInt(machineType.slice(i + 1, machineType.length - 1));
+  } else if (machineType.startsWith("g2-standard")) {
+    // L4
+    desc = spot
+      ? "Nvidia L4 GPU attached to Spot Preemptible VMs"
+      : "Nvidia L4 GPU";
+    count = parseInt(machineType.slice(i + 1));
+  } else {
+    throw Error(`unsupported machineType = ${machineType}`);
+  }
+  const price = await getPrice({ desc, location });
+  return count * price;
+}
+*/
+
 // Mutate the machine type pricing data in "data"
 // to match what is in the csv file, if possible.
 export async function updateMachineTypePricing(
@@ -242,6 +279,17 @@ export async function updateMachineTypePricing(
   warnOnly = true,
   showWrong = true,
 ) {
+  if (
+    // NOTE: our non-spot scraped a2- and g2- prices include the GPU, so they are
+    // always very wrong (way too big), and get fixed here.  No need to report that.
+    // This is just because this is a weird edge case where google put the gpu price into
+    // the VM price in the table on the website.
+    machineType.startsWith("a2-") ||
+    machineType.startsWith("g2-")
+  ) {
+    showWrong = false;
+  }
+
   const { vcpu, memory } = data;
   const zoneData = await getZones();
   for (const spot of [false, true]) {
@@ -347,6 +395,4 @@ export async function updateDiskPricing(data: DiskData) {
       }
     }
   }
-
-
 }

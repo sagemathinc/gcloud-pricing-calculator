@@ -51,7 +51,14 @@ async function updateGpuData(data) {
       "asia-southeast1-c": 2264.14 / 730,
     },
     // @ts-ignore
-    machineType: "a2-highgpu-1g",
+    machineType: {
+      1: "a2-highgpu-1g",
+      2: "a2-highgpu-2g",
+      4: "a2-highgpu-4g",
+      8: "a2-highgpu-8g",
+      // note for 16 -- this is a lot cheaper than 2x a2-highgpu-8g.
+      16: "a2-megagpu-16g",
+    },
   };
   await updateAcceleratorPricing(
     "Nvidia Tesla A100 GPU",
@@ -80,7 +87,12 @@ async function updateGpuData(data) {
       "asia-southeast1-c": 3537.63 / 730,
     },
     // @ts-ignore
-    machineType: "a2-ultragpu-1g",
+    machineType: {
+      1: ["a2-ultragpu-1g"],
+      2: ["a2-ultragpu-2g"],
+      4: ["a2-ultragpu-4g"],
+      8: ["a2-ultragpu-8g"],
+    },
   };
   await updateAcceleratorPricing(
     "Nvidia Tesla A100 80GB GPU",
@@ -124,9 +136,21 @@ async function updateGpuData(data) {
       "us-west1-b": 408.83 / 730,
       "us-west1-c": 408.83 / 730,
     },
-    machineType: "g2",
+    machineType: {
+      1: [
+        "g2-standard-4",
+        "g2-standard-8",
+        "g2-standard-12",
+        "g2-standard-16",
+        "g2-standard-32",
+      ],
+      2: ["g2-standard-24"],
+      4: ["g2-standard-48"],
+      8: ["g2-standard-96"],
+    },
   };
-  // first attempt
+  // first attempt -- just make up prices at the worst;
+  // below we replace these by the real prices.
   data.accelerators["nvidia-l4"].spot = sixtyPercentOff(
     data.accelerators["nvidia-l4"].prices,
   );
@@ -168,25 +192,6 @@ async function updateGpuData(data) {
       data.accelerators["nvidia-l4"].prices[zone] = MISSING_PRICE;
       data.accelerators["nvidia-l4"].spot[zone] = MISSING_SPOT_PRICE;
     }
-  }
-
-  // So I'm using a made up name for count=2, 4, 8, and you'll have
-  // to fix this in your API calls.
-  for (const n of [2, 4, 8]) {
-    data.accelerators[`nvidia-l4-x${n}`] = {
-      count: n,
-      max: n,
-      memory: 12 * n,
-      machineType: `g2-standard-${12 * n}`,
-    };
-    data.accelerators[`nvidia-l4-x${n}`].prices = scalePrices(
-      data.accelerators["nvidia-l4"].prices,
-      n,
-    );
-    data.accelerators[`nvidia-l4-x${n}`].spot = scalePrices(
-      data.accelerators["nvidia-l4"].spot,
-      n,
-    );
   }
 
   // Remove K80 data, because it is deprecated anyways (and wrong)
