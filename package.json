@@ -1,15 +1,19 @@
 {
   "name": "@cocalc/gcloud-pricing-calculator",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Google Cloud Pricing Calculator",
   "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepublishOnly": "pnpm audit && rm -rf dist && pnpm exec tsc && echo \"require('./dist/lib').getData()\" | node",
+    "prepublishOnly": "pnpm audit && rm -rf dist && pnpm exec tsc && echo \"require('./dist/lib').updateData()\" | node",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules"
   },
-  "files": ["dist/**", "README.md", "package.json"],
+  "files": [
+    "dist/**",
+    "README.md",
+    "package.json"
+  ],
   "engines": {
     "node": ">=0.18.0"
   },
@@ -20,12 +24,14 @@
   },
   "dependencies": {
     "awaiting": "^3.0.0",
-    "cacache": "^18.0.0",
     "cheerio": "1.0.0-rc.12",
     "csv-parse": "^5.5.2",
     "debug": "^4.3.4"
   },
-  "keywords": ["google", "cloud"],
+  "keywords": [
+    "google",
+    "cloud"
+  ],
   "license": "AGPL noncommercial -- SEE LICENSE.md",
   "repository": {
     "type": "git",

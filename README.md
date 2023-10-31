@@ -78,33 +78,17 @@ interface GoogleCloudData {
 
 In particular, it gives price data about all machine types, standard disks and ssd disks, and GPU's ('accelerators'). It also lists all zones and has information about if they have GPU's, whether they are low CO2, and where they are.
 
-The result is cached on disk for 1 year by default, but you can change the cache time by giving the number of days to cache as an argument to getData, e.g., give 0 to not use the cache:
+The result is cached on disk and included with this package. To recompute it:
 
 ```js
-// not cached
-await gcloudPricing.getData(0);
+await gcloudPricing.updateData();
 ```
 
-There is no real point in invalidating the cache since most of the data is really from a csv file that is in the data directory shipped with this library.
+There is no point in doing this unless you also update the csv file in the data subdirectory.
 
-Google updates spot prices "at most once per month" and on demand prices much less frequently.
+Google updates spot prices "at most once per month" and on demand prices much less frequently. They have a private mailing list that they send an excel file to about upcoming updates. It would be natural to add a way of scheduling one of those to this package, but that is not done yet.
 
-Use Infinity if you want to always use the pricing data included with this package \(e.g., you're using node version &lt; 18 without fetch\):
-
-```js
-// always uses disk cache:
-await gcloudPricing.getData(Infinity);
-```
-
-In addition to instance types, the data object also has keys disk-standard and disk-ssd. These map to an object:
-
-```js
-{
-prices: {region to price in dollars per hour}
-}
-```
-
-We don't include any other information about disk or snapshot prices. If you need that, see the code in lib/disk-pricing.
+We don't include information yet about snapshot prices.
 
 ## Warnings
 

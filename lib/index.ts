@@ -1,3 +1,3 @@
-export { getData } from "./get-data";
+export { getData, updateData } from "./get-data";
 
 export { sortedPrices, zonesWithMachineType } from "./calc";
