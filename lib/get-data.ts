@@ -8,7 +8,9 @@ const log = debug("gcloud-info");
 
 const cachePath = join(__dirname, "cache");
 
-const DEFAULT_CACHE_DAYS = 1;
+// cache basically indefinitely, because we're really depending on the csv file
+// in the data directory.
+const DEFAULT_CACHE_DAYS = 365;
 
 export async function getData(maxAgeDays: number = DEFAULT_CACHE_DAYS) {
   log("checking for cached data");

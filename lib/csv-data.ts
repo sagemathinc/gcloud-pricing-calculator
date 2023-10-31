@@ -148,7 +148,8 @@ export async function getPrice({
 export async function updateAcceleratorPricing(
   desc: string,
   data: { [zone: string]: number },
-  warnOnly = false,
+  warn = false,
+  error = false,
   showWrong = false,
 ) {
   const zoneData = await getZones();
@@ -168,9 +169,10 @@ export async function updateAcceleratorPricing(
       data[zone] = price;
     } catch (err) {
       const msg = `**WARNING** -- no data for '${desc}' in '${location}' -- ${err.message}`;
-      if (warnOnly) {
+      if (warn) {
         console.warn(msg);
-      } else {
+      }
+      if (error) {
         throw Error(msg);
       }
     }
@@ -276,8 +278,9 @@ async function getRequiredGpuPrice({ machineType, spot, location }) {
 export async function updateMachineTypePricing(
   machineType: string,
   data: PriceData,
-  warnOnly = true,
-  showWrong = true,
+  warn = false,
+  error = false,
+  showWrong = false,
 ) {
   if (
     // NOTE: our non-spot scraped a2- and g2- prices include the GPU, so they are
@@ -305,7 +308,7 @@ export async function updateMachineTypePricing(
       location = toAscii(location);
       if (!location) {
         const msg = `Missing zone data for zone '${zone}', when updating pricing about '${machineType}' for region '${region}'.`;
-        if (warnOnly) {
+        if (warn) {
           console.warn(msg);
         } else {
           throw Error(msg);
@@ -337,9 +340,10 @@ export async function updateMachineTypePricing(
         const msg = `**WARNING** -- no data for '${machineType}' ${
           spot ? "spot" : "standard"
         } in '${location}' -- ${err.message}`;
-        if (warnOnly) {
-          //console.warn(msg);
-        } else {
+        if (warn) {
+          console.warn(msg);
+        }
+        if (error) {
           throw Error(msg);
         }
       }
