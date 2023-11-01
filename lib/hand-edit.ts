@@ -1,14 +1,12 @@
 /*
-I VERY TEDIOUSLY (and hopefully not error prone)
+I VERY TEDIOUSLY (and hopefully not too error prone)
 enter machine configuration into the GCP web console, and seeing what the
-price quotes are.  There doesn't seem to be reliable pricing data anywhere
-that I can find for 40GB A100's, 80GB A100's, and tensor core L4's, since
-maybe they are all just very new, or at least finding exactly where
-these are available in all cases.
+price quotes are and most importantly exactly what regions have them.
+THEN we use the csv data file of pricing I downloaded manually from the
+cloud console to replace *all* the prices with correct official prices.
 
-What I've done here is manually copy the zones and prices, *then* used
-the csv data file of pricing I downloaded manually from the cloud console
-to then replace the prices with official prices.
+A lot of the info about allowed machine types, etc., I just figured out
+by using the cloud console.
 */
 
 import {
@@ -50,14 +48,13 @@ async function updateGpuData(data) {
       "asia-southeast1-b": 2264.14 / 730,
       "asia-southeast1-c": 2264.14 / 730,
     },
-    // @ts-ignore
     machineType: {
-      1: "a2-highgpu-1g",
-      2: "a2-highgpu-2g",
-      4: "a2-highgpu-4g",
-      8: "a2-highgpu-8g",
+      1: ["a2-highgpu-1g"],
+      2: ["a2-highgpu-2g"],
+      4: ["a2-highgpu-4g"],
+      8: ["a2-highgpu-8g"],
       // note for 16 -- this is a lot cheaper than 2x a2-highgpu-8g.
-      16: "a2-megagpu-16g",
+      16: ["a2-megagpu-16g"],
     },
   };
   await updateAcceleratorPricing(
@@ -86,7 +83,6 @@ async function updateGpuData(data) {
       "europe-west4-a": 3157.4 / 730,
       "asia-southeast1-c": 3537.63 / 730,
     },
-    // @ts-ignore
     machineType: {
       1: ["a2-ultragpu-1g"],
       2: ["a2-ultragpu-2g"],
@@ -198,9 +194,7 @@ async function updateGpuData(data) {
   delete data.accelerators["nvidia-tesla-k80"];
 
   for (const key in data.accelerators) {
-    // @ts-ignore
     if (data.accelerators[key].machineType == null) {
-      // @ts-ignore
       data.accelerators[key].machineType = "n1-";
     }
   }
