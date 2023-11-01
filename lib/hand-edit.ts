@@ -23,6 +23,10 @@ export default async function handEdit(data) {
 }
 
 async function updateGpuData(data) {
+  // for some reason our parsing ends up with a max of 4, but
+  // the actual max is 8.
+  data.accelerators["nvidia-tesla-v100"].max = 8;
+
   // A100 40GB
   data.accelerators["nvidia-tesla-a100"] = {
     count: 1,
@@ -106,24 +110,30 @@ async function updateGpuData(data) {
   // with the L4 series.
   data.accelerators["nvidia-l4"] = {
     count: 1,
-    max: 1,
+    max: 8,
     memory: 24,
     prices: {
       "asia-east1-a": 473.38 / 730,
       "asia-east1-c": 473.38 / 730,
       "asia-northeast1-a": 525.02 / 730,
       "asia-northeast1-c": 525.02 / 730,
+      "asia-northeast3-b": 525.02 / 730,
       "asia-south1-a": 425.57 / 730,
+      "asia-south1-b": 425.57 / 730,
+      "asia-southeast1-a": 504.37 / 730,
       "asia-southeast1-b": 504.37 / 730,
       "asia-southeast1-c": 504.37 / 730,
+      "europe-west1-b": 450.16 / 730,
       "europe-west1-c": 450.16 / 730,
       "europe-west2-a": 465.49 / 730,
       "europe-west2-b": 465.49 / 730,
+      "europe-west3-b": 465.49 / 730,
       "europe-west4-a": 429.7 / 730,
       "europe-west4-b": 429.7 / 730,
       "europe-west4-c": 429.7 / 730,
       "us-central1-a": 408.83 / 730,
       "us-central1-b": 408.83 / 730,
+      "us-central1-c": 408.83 / 730,
       "us-east1-b": 408.83 / 730,
       "us-east1-d": 408.83 / 730,
       "us-east4-a": 407.49 / 730,
@@ -131,6 +141,8 @@ async function updateGpuData(data) {
       "us-west1-a": 408.83 / 730,
       "us-west1-b": 408.83 / 730,
       "us-west1-c": 408.83 / 730,
+      "us-west4-a": 460.46 / 730,
+      "us-west4-c": 460.46 / 730,
     },
     machineType: {
       1: [
