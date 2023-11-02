@@ -3,6 +3,8 @@
 // https://cloud.google.com/compute/vm-instance-pricing are mostly massively
 // wrong, saying the price is way lower than it really is.  So below we
 // fix all the spot prices using this data.
+// Note that we *also* again fix spot pricing in the csv-data.ts stage,
+// where we use even better data :-).
 
 import cheerio from "cheerio";
 import { toPriceMap } from "./gcp-compute";

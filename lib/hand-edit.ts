@@ -16,10 +16,23 @@ import {
 } from "./csv-data";
 
 export default async function handEdit(data) {
+  await missingSpotInstancePrices(data);
   await updateGpuData(data);
   removeIncompleteMachineTypes(data);
   await updateMachineTypeData(data);
   await updateDisks(data);
+}
+
+export function missingSpotInstancePrices(data) {
+  // E.g., The C3D spot pricing is too new, hence not at https://cloud.google.com/spot-vms/pricing, so we don't get it.
+  for (const machineType in data.machineTypes) {
+    if (Object.keys(data.machineTypes[machineType].spot ?? {}).length == 0) {
+      data.machineTypes[machineType].spot = scalePrices(
+        data.machineTypes[machineType].prices,
+        0.4,
+      );
+    }
+  }
 }
 
 async function updateGpuData(data) {

@@ -127,3 +127,4 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
+
