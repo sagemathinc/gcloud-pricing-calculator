@@ -36,7 +36,7 @@ export interface ZoneData {
   gpus: boolean; // if true, has gpus
 }
 
-async function parsePricingData() {
+export async function parsePricingData() {
   const body = await fetchZoneData();
   // Use cheerio to parse the HTML
   const $ = cheerio.load(body);
