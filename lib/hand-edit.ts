@@ -25,7 +25,16 @@ export default async function handEdit(data) {
 
 export function missingSpotInstancePrices(data) {
   // E.g., The C3D spot pricing is too new, hence not at https://cloud.google.com/spot-vms/pricing, so we don't get it.
+  // 2024-03 note: Google says "All machine series support Spot VMs (and preemptible VMs), with
+  // the exception of the M2, M3, and H3 machine series." at https://cloud.google.com/compute/docs/machine-resource
+  // Their cloud console for M2 doesn't let you make them, but the API does let you make them!
+  // For M3 their UI even lets you make spot instances.
+  // I tried H3 and that does fail.
+
   for (const machineType in data.machineTypes) {
+    if (machineType.startsWith("h3")) {
+      continue;
+    }
     if (Object.keys(data.machineTypes[machineType].spot ?? {}).length == 0) {
       data.machineTypes[machineType].spot = scalePrices(
         data.machineTypes[machineType].prices,

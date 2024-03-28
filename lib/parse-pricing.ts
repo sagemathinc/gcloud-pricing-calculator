@@ -152,10 +152,6 @@ export function machineTypeToPriceData({
   const machineTypes: { [name: string]: PriceData } = {};
 
   for (const rows of tables) {
-    const x = JSON.stringify(rows).includes("h3-standard-88");
-    if (x) {
-      console.log("!! ", rows);
-    }
     let foundOnDemand = false;
     const headings = rows[0].cells.map((heading) => {
       if (!foundOnDemand && heading.toLowerCase().includes("price")) {
@@ -173,9 +169,6 @@ export function machineTypeToPriceData({
     for (let i = 1; i < rows.length; i++) {
       const { cells } = rows[i];
       if (cells[0].includes("custom-machine-type")) {
-        if (x) {
-          console.log("skip 2");
-        }
         continue;
       }
       const row: any = {};
@@ -214,9 +207,6 @@ export function machineTypeToPriceData({
         vcpu,
         memory,
       };
-      if (x) {
-        console.log("machineType!", machineType, machineTypes[machineType]);
-      }
     }
   }
   const accelerators: { [acceleratorType: string]: PriceData } = {};
@@ -246,7 +236,7 @@ function spotPrice({ spotData, machineType, vcpu, memory, regions }) {
   const data = spotData[family];
   const x = {};
   if (data == null) {
-    // no spot pricing available, e.g., for an m2.
+    // no spot pricing available
     return x;
   }
   for (const region of regions) {
