@@ -25,6 +25,16 @@ export default async function handEdit(data) {
 }
 
 function missingMachineTypes(data) {
+  if (data.extra == null) {
+    data.extra = {};
+  }
+  // google is now making a new "hyperdisk" that is faster than normal disks.
+  // some machine types (e.g., n4) ONLY work with hyperdisk, and others
+  // can support both.  We store this info here for now.
+  data.extra["hyperdisk-balanced"] = {
+    requiredMachineTypes: ["n4"],
+    supportedMachineTypes: ["h3", "c3", "c3d", "m3", "n4"],
+  };
   // n4's are in preview (as of 2024-04), so they
   // aren't found when scraping and we are missing the data
   for (const zone of [
