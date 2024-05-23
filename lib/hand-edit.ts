@@ -116,10 +116,6 @@ export function missingSpotInstancePrices(data) {
 }
 
 async function updateGpuData(data) {
-  // for some reason our parsing ends up with a max of 4, but
-  // the actual max is 8.
-  data.accelerators["nvidia-tesla-v100"].max = 8;
-
   // A100 40GB
   data.accelerators["nvidia-tesla-a100"] = {
     count: 1,
@@ -325,6 +321,10 @@ async function updateGpuData(data) {
   ]) {
     const label = type.split("-")[2].toUpperCase();
     const desc = `Nvidia Tesla ${label} GPU`;
+    if(data.accelerators[type] == null) {
+      // deprecated
+      continue;
+    }
     await updateAcceleratorPricing(desc, data.accelerators[type].prices);
     await updateAcceleratorPricing(
       desc + " attached to Spot Preemptible VMs",
@@ -375,6 +375,10 @@ function changeGPURegionPricesToZonePrices(data) {
   for (const type in ACCELERATOR_TO_ZONES) {
     const x = data.accelerators[type];
     const zones = ACCELERATOR_TO_ZONES[type].split(" ");
+    if (x == null) {
+      // deprecated?
+      continue;
+    }
     x.prices = regionToZones(x.prices, zones);
     x.spot = regionToZones(x.spot, zones);
   }

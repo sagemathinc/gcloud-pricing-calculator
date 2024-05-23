@@ -4,14 +4,18 @@
 
 This is a node.js library that downloads and parses the website [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) and several other public data sources form Google, and also includes a copy of some of the official SKU pricing list, parses everything, makes a range of automatic and manual changes, then makes it possibly to very quickly use all of that data from Javascript.
 
-**It also takes into account that the spot prices at** [**https://cloud.google.com/compute/vm\-instance\-pricing**](https://cloud.google.com/compute/vm-instance-pricing) **are mostly very wrong**, and instead pulls spot prices from [https://cloud.google.com/spot\-vms/pricing](https://cloud.google.com/spot-vms/pricing).
+**It also takes into account that the spot prices at** [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) **might be mostly wrong \(they were when I was writing this library\)**, and instead pulls spot prices from [https://cloud.google.com/spot\-vms/pricing](https://cloud.google.com/spot-vms/pricing).
 
 Finally, it includes some by hand tables of pricing for A100's and some other adjustments that I tedious created _by hand_ by entering machine configurations into Google Cloud. There's a GPU table at [https://cloud.google.com/compute/gpus\-pricing](https://cloud.google.com/compute/gpus-pricing) . It then tries to use the SKU data to correct all of these prices.
 
 _**CAVEAT: Obviously don't trust anything here.**_ I made this. I'm using it. And I made it public, though under a **non\-commercial license**. This very much comes with absolutely no guarantees! Buyer beware, literally. All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute! See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator)
 Also, see [this similar project](https://github.com/Cyclenerd/google-cloud-pricing-cost-calculator/tree/master#readme).
 
-CAVEAT: Don't trust the official public google pricing pages either. They have numerous significant mistakes, where pricing is off by potentially thousands of dollars. However, the actual SKU pricing data seems to be what they actually charge. E.g., in Singapore the price per month for a `m1-ultramem-40` VM with 961GB of RAM [is listed here](https://cloud.google.com/compute/vm-instance-pricing) as \$10814.95, but in reality the price is \$5,411.74 \(roughly a factor of 2\). This is not a spot instance. Here are some examples where Google's publicly posted prices are off by at least 10% from what they actually charge.
+CAVEAT: Don't trust the official public google pricing pages either. They have numerous significant mistakes, where pricing is off by potentially thousands of dollars. However, the actual SKU pricing data seems to be what they actually charge. E.g., in Singapore the price per month for a `m1-ultramem-40` VM with 961GB of RAM [is listed here](https://cloud.google.com/compute/vm-instance-pricing) as \$10814.95, but in reality the price is \$5,411.74 \(roughly a factor of 2\). This is not a spot instance: 
+
+![](.README.md.upload/paste-0.7731360161162133)
+
+Here are some examples where Google's publicly posted prices are off by at least 10% from what they actually charge.
 
 ```
  'n1-highcpu-2' in 'asia-southeast2' : diff=0.017971232000000004, published=0.0773, actual=0.095271232
@@ -81,15 +85,25 @@ In particular, it gives price data about all machine types, standard disks and s
 
 The result is cached on disk and included with this package. To recompute it:
 
+First, **\(1\) update the csv file in the data subdirectory, then \(2\) run this:**
+
 ```js
-await gcloudPricing.updateData();
+> a = require('./dist/lib')
+{
+  getData: [Getter],
+  updateData: [Getter],
+  sortedPrices: [Getter],
+  zonesWithMachineType: [Getter]
+}
+> await a.updateData()
 ```
 
-There is no point in doing this unless you also update the csv file in the data subdirectory.
+There is no point in doing this unless you also update the csv file in the data subdirectory!
 
-Google updates spot prices "at most once per month" and on demand prices much less frequently. They have a private mailing list that they send an excel file to about upcoming updates. It would be natural to add a way of scheduling one of those to this package, but that is not done yet.
+- There is no automated way to get the csv file with data about pricing as of May 23, 2024.  I have made multiple support requests to Google about this, so maybe someday.
+- There interval between when the email about spot pricing changing goes out and prices actually change is difficult to discern.  Sometimes the email goes out days before the price is supposed to change. The last one I got was a day AFTER the change.
 
-We don't include information yet about snapshot prices.
+We don't include information yet about snapshot prices yet.
 
 ## Warnings
 
@@ -99,7 +113,9 @@ Also, your prices can be different than the published rates, e.g., if Google has
 
 This package is AGPL + non-commercial clause licensed. If you want to use it in a product, contact us for a commercial license (help@cocalc.com).
 
-Another warning is that this updates date once per day by default. However, Google might update their pricing in the middle of a day, and for some part of that day this will be wrong. There's no way around that really. There is a [closed google group](https://groups.google.com/g/gce-spot-pricing-announcements/) that you can request to join which posts updates to spot pricing a few days in advance; I wish there were an api endpoint that returned "next known date when spot prices will change"...
+_Finally: I've never seen any indication that anybody has ever used this library besides me, so I tend to make that assumption.  If you're using this, email_ [_wstein@sagemath.com,_](mailto:wstein@sagemath.com) _so at least I might think twice before making breaking changes._
+
+_Finally: I've never seen any indication that anybody has ever used this library besides me, so I tend to make that assumption.  If you're using this, email_ [_wstein@sagemath.com,_](mailto:wstein@sagemath.com) _so at least I might think twice before making breaking changes._
 
 ## Related Official Google Pages
 
