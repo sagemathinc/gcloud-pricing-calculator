@@ -22,6 +22,7 @@ export default async function handEdit(data) {
   removeIncompleteMachineTypes(data);
   await updateMachineTypeData(data);
   await updateDisks(data);
+  updateStorage(data);
 }
 
 function missingMachineTypes(data) {
@@ -522,4 +523,132 @@ async function updateMachineTypeData(data) {
 // (2) add in the spot prices for local ssd.
 async function updateDisks(data) {
   await updateDiskPricing(data.disks);
+}
+
+function updateStorage(data) {
+  /*
+// Using https://github.com/sagemathinc/gcloud-pricing-calculator to figure
+// out the actual region Location names:
+> a = require('./dist'); z = await a.getData()
+> k = new Set(Object.values(z.zones).map((x)=>{w=x.location.split(',');return w[w.length-1].trim()}))
+Set(6) {
+  'North America',
+  'Europe',
+  'APAC',
+  'South Africa',
+  'Middle East'
+  'South America',
+}
+*/
+  // Manually copied from https://cloud.google.com/storage/pricing#cloud-storage-pricing
+  // as of June 14, 2024.
+  data.storage = {
+    atRest: {
+      /* TODO */
+    },
+    // Retrieval fee per GiB
+    retrieval: {
+      standard: 0,
+      nearline: 0.01,
+      coldline: 0.02,
+      archive: 0.05,
+    },
+    interRegionReplication: {
+      us: 0.02,
+      eu: 0.02,
+      asia: 0.08,
+    },
+    singleRegionOperations: {
+      standard: {
+        classA1000: 0.005,
+        classB1000: 0.0004,
+      },
+      nearline: {
+        classA1000: 0.01,
+        classB1000: 0.001,
+      },
+      coldline: {
+        classA1000: 0.02,
+        classB1000: 0.01,
+      },
+      archive: {
+        classA1000: 0.05,
+        classB1000: 0.05,
+      },
+    },
+    multiRegionOperations: {
+      standard: {
+        classA1000: 0.01,
+        classB1000: 0.0004,
+      },
+      nearline: {
+        classA1000: 0.02,
+        classB1000: 0.001,
+      },
+      coldline: {
+        classA1000: 0.04,
+        classB1000: 0.01,
+      },
+      archive: {
+        classA1000: 0.1,
+        classB1000: 0.05,
+      },
+    },
+    dataTransferOutsideGoogleCloud: {
+      // ignoring quantity discounts.
+      worldwide: 0.12, // means everywhere except china/australia.
+      china: 0.23,
+      australia: 0.19,
+    },
+    dataTransferInsideGoogleCloud: {
+      "North America": {
+        "North America": 0.02,
+        Europe: 0.05,
+        APAC: 0.08,
+        "South Africa": 0.1,
+        "Middle East": 0.11,
+        "South America": 0.14,
+      },
+      Europe: {
+        "North America": 0.05,
+        Europe: 0.02,
+        APAC: 0.08,
+        "South Africa": 0.1,
+        "Middle East": 0.11,
+        "South America": 0.14,
+      },
+      APAC: {
+        "North America": 0.08,
+        Europe: 0.08,
+        APAC: 0.08,
+        "South Africa": 0.1,
+        "Middle East": 0.11,
+        "South America": 0.14,
+      },
+      "South Africa": {
+        "North America": 0.1,
+        Europe: 0.1,
+        APAC: 0.1,
+        "South Africa": 0.08,
+        "Middle East": 0.11,
+        "South America": 0.14,
+      },
+      "Middle East": {
+        "North America": 0.11,
+        Europe: 0.11,
+        APAC: 0.11,
+        "South Africa": 0.11,
+        "Middle East": 0.08,
+        "South America": 0.14,
+      },
+      "South America": {
+        "North America": 0.14,
+        Europe: 0.14,
+        APAC: 0.14,
+        "South Africa": 0.14,
+        "Middle East": 0.14,
+        "South America": 0.14,
+      },
+    },
+  };
 }

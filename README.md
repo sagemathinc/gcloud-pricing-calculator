@@ -94,6 +94,7 @@ First, **\(1\) update the csv file in the data subdirectory, then \(2\) run this
   updateData: [Getter],
   sortedPrices: [Getter],
   zonesWithMachineType: [Getter]
+  storage:{...}
 }
 > await a.updateData()
 ```
