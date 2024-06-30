@@ -13,6 +13,7 @@ import {
   updateAcceleratorPricing,
   updateMachineTypePricing,
   updateDiskPricing,
+  getStorageAtRestPricing,
 } from "./csv-data";
 
 export default async function handEdit(data) {
@@ -22,8 +23,9 @@ export default async function handEdit(data) {
   removeIncompleteMachineTypes(data);
   await updateMachineTypeData(data);
   await updateDisks(data);
-  updateStorage(data);
+  await updateStorage(data);
 }
+
 
 function missingMachineTypes(data) {
   if (data.extra == null) {
@@ -521,7 +523,7 @@ async function updateDisks(data) {
   await updateDiskPricing(data.disks);
 }
 
-function updateStorage(data) {
+async function updateStorage(data) {
   /*
 // Using https://github.com/sagemathinc/gcloud-pricing-calculator to figure
 // out the actual region Location names:
@@ -539,9 +541,7 @@ Set(6) {
   // Manually copied from https://cloud.google.com/storage/pricing#cloud-storage-pricing
   // as of June 14, 2024.
   data.storage = {
-    atRest: {
-      /* TODO */
-    },
+    atRest: await getStorageAtRestPricing(),
     // Retrieval fee per GiB
     retrieval: {
       standard: 0,
@@ -549,6 +549,7 @@ Set(6) {
       coldline: 0.02,
       archive: 0.05,
     },
+    // Fee per GiB
     interRegionReplication: {
       us: 0.02,
       eu: 0.02,

@@ -7,8 +7,9 @@ https://console.cloud.google.com/billing/[your billing account id]/pricing
 Then download the whole file, which is about 10MB and has all Google Cloud pricing across everything they sell. After you do that, grep out just the GCP compute engine prices, which are about half of this big file.
 
 ```sh
-head -n 1 "Pricing for My Billing Account.csv" > 2023-10-30.csv
-grep "^GCP,Compute Engine" "Pricing for My Billing Account.csv" >> 2023-10-30.csv
+head -n 1 "Pricing for My Billing Account.csv" > pricing.csv
+grep "^GCP,Compute Engine" "Pricing for My Billing Account.csv" >> pricing.csv
+grep "^GCP,Cloud Storage" "Pricing for My Billing Account.csv" >> pricing.csv
 ```
 
 The code will take whatever file is last in lex order, so it's good to use the date.
@@ -20,4 +21,3 @@ NOTES about this data:
 - As far as I can tell, these prices are correct.
 
 - There are prices for things listed here that just don't exist for sale. E.g., there's a new machine type called "c3" and this file lists all kinds of amazing spot instance prics in various middle east regions, and yet these machines aren't available there. That's why this data is just a complement to scraping the pricing pages, which _do_ have the available locations.
-

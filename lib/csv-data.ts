@@ -67,12 +67,14 @@ export async function parsedCsvData() {
     }
     let v = sku["SKU description"].split("running in");
     if (v.length < 2) {
-      // we only need data about running items, e.g., CPU's and GPU's
-      // actually also local ssd
+      // we only need data about running items, e.g., CPU's and GPU's,
+      // also local ssd, and google cloud storage
       if (sku["SKU description"].includes("SSD backed Local Storage")) {
         v = sku["SKU description"].split(" in ");
       } else {
-        continue;
+        if (sku["Service description"] != "Cloud Storage") {
+          continue;
+        }
       }
     }
     const desc = v[0].trim();
@@ -399,4 +401,106 @@ export async function updateDiskPricing(data: DiskData) {
       }
     }
   }
+}
+
+export async function getStorageAtRestPricing() {
+  const { parsed } = await parsedCsvData();
+  const multiRegions = {};
+  const regions = {};
+  const dualRegions = {};
+  // todo: dual regions
+  for (const location of ["US", "EU", "Asia"]) {
+    const prices = {};
+    multiRegions[location.toLowerCase()] = prices;
+    for (const cls of ["Standard", "Nearline", "Coldline", "Archive"]) {
+      let SKUdescription = `${cls} Storage ${location} Multi-region`;
+      let p = parsed[SKUdescription];
+      if (p == null) {
+        if (location == "EU") {
+          // sometimes EU is "Europe"
+          SKUdescription = `${cls} Storage Europe Multi-region`;
+          p = parsed[SKUdescription];
+        }
+        if (p == null) {
+          throw Error(`missing data for "${SKUdescription}"`);
+        }
+      }
+      const s = p[""];
+      const cost = parseFloat(s["List price ($)"]);
+      prices[cls] = cost;
+    }
+  }
+
+  const zoneData = await getZones();
+  for (const zone in zoneData) {
+    let location = toAscii(zoneData[zone].location);
+    const region = zone.slice(0, zone.lastIndexOf("-"));
+    const prices = {};
+    regions[region] = prices;
+    for (const cls of ["Standard", "Nearline", "Coldline", "Archive"]) {
+      // "Nearline Storage Oregon"
+      const place = location.split(",")[0].trim();
+      let SKUdescription = `${cls} Storage ${place}`;
+      let p = parsed[SKUdescription];
+      if (p == null) {
+        // try second part of name
+        const place = location
+          .split(",")[1]
+          .trim()
+          .replace("Virginia", "Northern Virginia");
+        SKUdescription = `${cls} Storage ${place}`;
+        p = parsed[SKUdescription];
+        if (p == null) {
+          // try prefixing with Autoclass, since pricing is the same
+          const place = location.split(",")[1].trim();
+          SKUdescription = `Autoclass ${cls} Storage ${place}`;
+          p = parsed[SKUdescription];
+          if (p == null) {
+            console.log({ zone, data: zoneData[zone] });
+            throw Error(`missing data for zone="${zone}", cls="${cls}"`);
+          }
+        }
+      }
+      const s = p[""];
+      const cost = parseFloat(s["List price ($)"]);
+      prices[cls] = cost;
+    }
+  }
+
+  for (const zone in zoneData) {
+    let location = toAscii(zoneData[zone].location);
+    const region = zone.slice(0, zone.lastIndexOf("-"));
+    const prices = {};
+    dualRegions[region] = prices;
+    for (const cls of ["Standard", "Nearline", "Coldline", "Archive"]) {
+      // "Nearline Storage Oregon Dual-region"
+      const place = location.split(",")[0].trim();
+      let SKUdescription = `${cls} Storage ${place} Dual-region`;
+      let p = parsed[SKUdescription];
+      if (p == null) {
+        // try second part of name
+        const place = location
+          .split(",")[1]
+          .trim()
+          .replace("Virginia", "Northern Virginia");
+        SKUdescription = `${cls} Storage ${place} Dual-region`;
+        p = parsed[SKUdescription];
+        if (p == null) {
+          // try prefixing with Autoclass, since pricing is the same
+          const place = location.split(",")[1].trim();
+          SKUdescription = `Autoclass ${cls} Storage ${place} Dual-region`;
+          p = parsed[SKUdescription];
+          if (p == null) {
+            // for dual regions a lot are missing.
+            continue;
+          }
+        }
+      }
+      const s = p[""];
+      const cost = parseFloat(s["List price ($)"]);
+      prices[cls] = cost;
+    }
+  }
+
+  return { multiRegions, regions, dualRegions };
 }
