@@ -33,15 +33,18 @@ function missingMachineTypes(data) {
   // some machine types (e.g., n4) ONLY work with hyperdisk, and others
   // can support both.  We store this info here for now.
   data.extra["hyperdisk-balanced"] = {
-    requiredMachineTypes: ["n4"],
-    supportedMachineTypes: ["h3", "c3", "c3d", "m3", "n4"],
+    requiredMachineTypes: ["n4", "c4"],
+    supportedMachineTypes: ["h3", "c3", "c3d", "c4", "m3", "n4"],
   };
-  // n4's are in preview (as of 2024-04), so they
+  // for good measure ensure all required ones are supported (yep, I messed this up just now)
+  for (const x of data.extra["hyperdisk-balanced"].requiredMachineTypes) {
+    if (!data.extra["hyperdisk-balanced"].supportedMachineTypes.includes(x)) {
+      data.extra["hyperdisk-balanced"].supportedMachineTypes.push(x);
+    }
+  }
+  // c4's are in preview (as of 2024-06), so they
   // aren't found when scraping and we are missing the data
   for (const zone of [
-    "asia-southeast1-a",
-    "asia-southeast1-b",
-    "asia-southeast1-c",
     "us-central1-a",
     "us-central1-c",
     "us-east1-b",
@@ -50,40 +53,35 @@ function missingMachineTypes(data) {
     "us-east4-a",
     "us-east4-b",
     "us-east4-c",
-    "europe-west1-b",
-    "europe-west1-c",
-    "europe-west1-d",
     "europe-west4-a",
     "europe-west4-b",
     "europe-west4-c",
   ]) {
-    if (!data.zones[zone].machineTypes.includes("n4")) {
-      data.zones[zone].machineTypes.push("n4");
+    if (!data.zones[zone].machineTypes.includes("c4")) {
+      data.zones[zone].machineTypes.push("c4");
     }
   }
-  for (const n of [2, 4, 8, 16, 32, 48, 64, 80]) {
+  for (const n of [2, 4, 8, 16, 32, 48, 96, 192]) {
     for (const t of ["standard", "highmem", "highcpu"]) {
       let vcpu, memory;
       if (t == "standard") {
         vcpu = n;
-        memory = 4 * n;
+        memory = Math.floor(n * 3.75);
       } else if (t == "highmem") {
         vcpu = n;
-        memory = 8 * n;
+        memory = Math.floor(n * 7.75);
       } else if (t == "highcpu") {
         vcpu = n;
         memory = 2 * n;
       }
-      const instanceType = `n4-${t}-${n}`;
+      const instanceType = `c4-${t}-${n}`;
       if (data.machineTypes[instanceType] == null) {
         data.machineTypes[instanceType] = {
           // the actual much smaller prices will get swapped in from the CSV data.
           prices: {
-            "asia-southeast1": 10000,
             "us-central1": 10000,
             "us-east1": 10000,
             "us-east4": 10000,
-            "europe-west1": 10000,
             "europe-west4": 10000,
           },
           spot: {},
@@ -96,9 +94,7 @@ function missingMachineTypes(data) {
 }
 
 export function missingSpotInstancePrices(data) {
-  // E.g., The C3D spot pricing is too new, hence not at https://cloud.google.com/spot-vms/pricing, so we don't get it. (no longer true, obviously).
-  // 2024-03 note: Google says "All machine series support Spot VMs (and preemptible VMs), with
-  // the exception of the M2, M3, and H3 machine series." at https://cloud.google.com/compute/docs/machine-resource
+  // 2024-03 note: Google says "All machine series support Spot VMs (and preemptible VMs), with the exception of the M2, M3, and X4 machine series, and C3 bare metal machine types." at https://cloud.google.com/compute/docs/machine-resource
   // Their cloud console for M2 doesn't let you make them, but the API does let you make them!
   // For M3 their UI even lets you make spot instances.
   // I tried H3 and that does fail.
