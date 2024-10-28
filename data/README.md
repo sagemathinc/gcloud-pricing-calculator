@@ -4,7 +4,7 @@ This is the subset of lines in the CSV file "Pricing for My Billing Account.csv"
 https://console.cloud.google.com/billing/[your billing account id]/pricing
 ```
 
-Then download the whole file, which is about 10MB and has all Google Cloud pricing across everything they sell. After you do that, grep out just the GCP compute engine prices, which are about half of this big file.
+Then download the whole file, which is about 15MB and has all of **your** Google Cloud pricing across everything they sell. After you do that, grep out just the GCP compute engine prices, which are about half of this big file.
 
 ```sh
 head -n 1 "Pricing for My Billing Account.csv" > pricing.csv
