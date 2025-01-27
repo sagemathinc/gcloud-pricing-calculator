@@ -26,7 +26,6 @@ export default async function handEdit(data) {
   await updateStorage(data);
 }
 
-
 function missingMachineTypes(data) {
   if (data.extra == null) {
     data.extra = {};
@@ -93,6 +92,38 @@ function missingMachineTypes(data) {
       }
     }
   }
+
+  // A3-highgpu instances
+  for (const n of [1, 2, 4, 8]) {
+    const instanceType = `a3-highgpu-${n}g`;
+    // prices get updated from CSV later
+    const vcpu = n * 26;
+    const memory = n * 234;
+    data.machineTypes[instanceType] = {
+      prices: {
+        "us-east4": 10000,
+        "us-east5": 10000,
+        "us-central1": 10000,
+        "europe-west4": 10000,
+        "asia-southeast1": 10000,
+      },
+      spot: {},
+      vcpu,
+      memory,
+    };
+  }
+
+  // A3-ultragpu instances:
+  data.machineTypes["a3-ultragpu-8g"] = {
+    prices: {
+      "us-east5": 10000,
+      "us-west1": 10000,
+      "europe-west1": 10000,
+    },
+    spot: {},
+    vcpu: 224,
+    memory: 2952,
+  };
 }
 
 export function missingSpotInstancePrices(data) {
@@ -298,9 +329,83 @@ async function updateGpuData(data) {
   data.accelerators["nvidia-a100-80gb"].spot = sixtyPercentOff(
     data.accelerators["nvidia-a100-80gb"].prices,
   );
+
   await updateAcceleratorPricing(
     "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs",
     data.accelerators["nvidia-a100-80gb"].spot,
+  );
+
+  // H100 80GB
+  data.accelerators["nvidia-h100-80gb"] = {
+    count: 1,
+    max: 8,
+    memory: 80,
+    prices: {
+      "northamerica-northeast2-c": 7874.5 / 730,
+      "us-east4-a": 7151.48 / 730,
+      "us-east4-b": 7151.48 / 730,
+      "us-east4-c": 7151.48 / 730,
+      "us-east5-a": 8054.71 / 730,
+      "us-central1-a": 7151.48 / 730,
+      "us-central1-b": 7151.48 / 730,
+      "us-central1-c": 7151.48 / 730,
+      "us-west1-a": 7151.48 / 730,
+      "us-west1-b": 7151.48 / 730,
+      "us-west4-a": 8054.71 / 730,
+      "europe-west1-b": 7874.5 / 730,
+      "europe-west4-b": 9296.93 / 730,
+      "europe-west4-c": 9296.93 / 730,
+      "europe-west3-c": 8438.75 / 730,
+      "asia-northeast1-b": 10369.65 / 730,
+      "australia-southeast1-c": 8939.35 / 730,
+      "asia-southeast1-b": 9296.93 / 730,
+      "asia-southeast1-c": 9296.93 / 730,
+    },
+    machineType: {
+      1: ["a3-highgpu-1g"],
+      2: ["a3-highgpu-2g"],
+      4: ["a3-highgpu-4g"],
+      8: ["a3-highgpu-8g"],
+    },
+  };
+  await updateAcceleratorPricing(
+    "Nvidia Tesla H100 80GB GPU",
+    data.accelerators["nvidia-h100-80gb"].prices,
+  );
+  // default to 60% unless get something better from pricing data.
+  data.accelerators["nvidia-h100-80gb"].spot = sixtyPercentOff(
+    data.accelerators["nvidia-h100-80gb"].prices,
+  );
+  await updateAcceleratorPricing(
+    "Nvidia Tesla H100 80GB GPU attached to Spot Preemptible VMs",
+    data.accelerators["nvidia-h100-80gb"].spot,
+  );
+
+  // H200 141GB
+  data.accelerators["nvidia-h200-141gb"] = {
+    count: 8,
+    max: 8,
+    memory: 141,
+    prices: {
+      "us-east5-a": 54380.56 / 730 / 8,
+      "us-west1-c": 54380.56 / 730 / 8,
+      "europe-west1-b": 59878.45 / 730 / 8,
+    },
+    machineType: {
+      8: ["a3-ultragpu-8g"],
+    },
+  };
+  await updateAcceleratorPricing(
+    "Nvidia Tesla H200 141GB GPU",
+    data.accelerators["nvidia-h200-141gb"].prices,
+  );
+  // default to 60% unless get something better from pricing data.
+  data.accelerators["nvidia-h200-141gb"].spot = sixtyPercentOff(
+    data.accelerators["nvidia-h200-141gb"].prices,
+  );
+  await updateAcceleratorPricing(
+    "Nvidia Tesla H100 80GB GPU attached to Spot Preemptible VMs",
+    data.accelerators["nvidia-h200-141gb"].spot,
   );
 
   // Yes, it's just 'nvidia-l4' because NVidia stopped using the "Tesla" branding
@@ -416,6 +521,14 @@ async function updateGpuData(data) {
     }
   }
 
+  for (const machineType of ["nvidia-h100-80gb", "nvidia-h200-141gb"]) {
+    for (const zone in data.accelerators[machineType].prices) {
+      if (!data.zones[zone].machineTypes.includes("a3")) {
+        data.zones[zone].machineTypes.push("a3");
+      }
+    }
+  }
+
   changeGPURegionPricesToZonePrices(data);
 
   // Use the csv data to update as many of the other GPU's (not L4 or A100)
@@ -453,7 +566,7 @@ function scalePrices(obj, scale) {
   return obj2;
 }
 
-// Some wweird machine types like "n2-node-80-640"
+// Some weird machine types like "n2-node-80-640"
 // don't have data about vcpu and memory.  For now we
 // just don't support them.  Maybe they are a special
 // notation for something for later...

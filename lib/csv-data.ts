@@ -47,6 +47,7 @@ let parsed: {
   [skuDescription: string]: { [location: string]: SKUData };
 } | null = null;
 let families: { [family: string]: SKUData[] } | null = null;
+
 export async function parsedCsvData() {
   if (parsed != null && families != null) {
     return { parsed, families };
@@ -58,8 +59,27 @@ export async function parsedCsvData() {
     // Why -- because e.g., "São Paulo" v "Sao Paulo" can be a VERY expensive mistake!
     sku["SKU description"] = toAscii(sku["SKU description"]);
 
-    const taxonomy = sku["Product taxonomy"].split(">");
-    const family = taxonomy[taxonomy.length - 1].trim();
+    // We filter out "Cores: Per Core", since it holds no info we are using and its
+    // position is inconsistent!
+    // E.g., compare H100 and A100:
+    //     GCP > Compute > GPUs > GPUs On Demand > H100 > Cores: Per Core
+    //     GCP > Compute > GCE > VMs On Demand > Cores: Per Core > A2
+
+    const taxonomy = sku["Product taxonomy"]
+      .split(">")
+      .filter((x) => !x.includes("Cores:"));
+    let family = taxonomy[taxonomy.length - 1].trim();
+    if (family == "H100") {
+      // for some reason google calls it "H100" instead of A3, since GCP SKU's seem
+      // pretty weird, so we just fix it.
+      //     'Google service': 'GCP',
+      //     'Service description': 'Compute Engine',
+      //     'Service ID': '6F81-5844-456A',
+      //     'SKU ID': '8ECF-1E73-7170',
+      //     'SKU description': 'A3 Instance Core running in Milan',
+      //     'Product taxonomy': 'GCP > Compute > GPUs > GPUs On Demand > H100 > Cores: Per Core',
+      family = "A3";
+    }
     if (families[family] == null) {
       families[family] = [sku];
     } else {
@@ -237,43 +257,6 @@ export async function getMachineTypePrice({
     } in ${location}`,
   );
 }
-
-// a2- and g2- machine types MUST have a one or more gpu, and the gpu
-// and number is determined by the machine type.  Here we compute the
-// contribution to the final cost of just the GPU.
-/*
-async function getRequiredGpuPrice({ machineType, spot, location }) {
-  let count;
-  let desc;
-  const i = machineType.lastIndexOf("-");
-  if (machineType.startsWith("a2-ultragpu")) {
-    // A100 80GB
-    desc = spot
-      ? "Nvidia Tesla A100 80GB GPU attached to Spot Preemptible VMs"
-      : "Nvidia Tesla A100 80GB GPU";
-    count = parseInt(machineType.slice(i + 1, machineType.length - 1));
-  } else if (
-    machineType.startsWith("a2-highgpu") ||
-    machineType.startsWith("a2-megagpu")
-  ) {
-    // A100 40GB
-    desc = spot
-      ? "Nvidia Tesla A100 GPU attached to Spot Preemptible VMs"
-      : "Nvidia Tesla A100 GPU";
-    count = parseInt(machineType.slice(i + 1, machineType.length - 1));
-  } else if (machineType.startsWith("g2-standard")) {
-    // L4
-    desc = spot
-      ? "Nvidia L4 GPU attached to Spot Preemptible VMs"
-      : "Nvidia L4 GPU";
-    count = parseInt(machineType.slice(i + 1));
-  } else {
-    throw Error(`unsupported machineType = ${machineType}`);
-  }
-  const price = await getPrice({ desc, location });
-  return count * price;
-}
-*/
 
 // Mutate the machine type pricing data in "data"
 // to match what is in the csv file, if possible.

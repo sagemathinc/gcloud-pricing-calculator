@@ -10,7 +10,6 @@ import cheerio from "cheerio";
 import { fetchGpuData, parseGpuData } from "./gpu-pricing";
 import { getDisks } from "./disk-pricing";
 import { getZones, ZoneData } from "./zones";
-import { spotPricing } from "./spot-pricing";
 
 async function fetchPricingData() {
   const gcloudUrl = "https://cloud.google.com/compute/all-pricing";
@@ -71,14 +70,12 @@ export async function parsePricingData() {
 
   const disks = await getDisks();
   const zones = await getZones();
-  const spotData = await spotPricing();
 
   return {
     tables,
     gpus,
     disks,
     zones,
-    spotData,
   };
 }
 
@@ -132,13 +129,7 @@ function toInteger(s?: string): number | undefined {
   return parseInt(s.split(" ")[0]);
 }
 
-export function machineTypeToPriceData({
-  tables,
-  gpus,
-  disks,
-  zones,
-  spotData,
-}): {
+export function machineTypeToPriceData({ tables, gpus, disks, zones }): {
   machineTypes: { [machineType: string]: PriceData };
   disks: {
     "pd-standard": { prices: { [zone: string]: number } };
@@ -147,7 +138,6 @@ export function machineTypeToPriceData({
   };
   accelerators: { [acceleratorType: string]: PriceData };
   zones: { [zone: string]: ZoneData };
-  spotData;
 } {
   const machineTypes: { [name: string]: PriceData } = {};
 
@@ -197,13 +187,7 @@ export function machineTypeToPriceData({
       );
       machineTypes[machineType] = {
         prices,
-        spot: spotPrice({
-          spotData,
-          machineType,
-          vcpu,
-          memory,
-          regions: Object.keys(prices ?? {}),
-        }),
+        spot: {}, // gets filled in based on data/pricing.csv; assume initially no discount
         vcpu,
         memory,
       };
@@ -226,23 +210,7 @@ export function machineTypeToPriceData({
     disks[name] = { prices: disks[name] };
   }
 
-  return { machineTypes, accelerators, disks, zones, spotData };
-}
-
-function spotPrice({ spotData, machineType, vcpu, memory, regions }) {
-  // z['c2d'].vcpus['us-east4']*d.machineTypes['c2d-highcpu-8'].vcpu + z['c2d'].memory['us-east4']*d.machineTypes['c2d-highcpu-8'].memory
-
-  const family = machineType.split("-")[0];
-  const data = spotData[family];
-  const x = {};
-  if (data == null) {
-    // no spot pricing available
-    return x;
-  }
-  for (const region of regions) {
-    x[region] = data.vcpu[region] * vcpu + data.memory[region] * memory;
-  }
-  return x;
+  return { machineTypes, accelerators, disks, zones };
 }
 
 // In scraping data we use the names in the data sources.

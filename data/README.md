@@ -21,3 +21,4 @@ NOTES about this data:
 - As far as I can tell, these prices are correct.
 
 - There are prices for things listed here that just don't exist for sale. E.g., there's a new machine type called "c3" and this file lists all kinds of amazing spot instance prics in various middle east regions, and yet these machines aren't available there. That's why this data is just a complement to scraping the pricing pages, which _do_ have the available locations.
+
