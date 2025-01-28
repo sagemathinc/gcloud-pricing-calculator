@@ -369,7 +369,7 @@ async function updateGpuData(data) {
     },
   };
   await updateAcceleratorPricing(
-    "Nvidia Tesla H100 80GB GPU",
+    "Nvidia H100 80GB GPU",
     data.accelerators["nvidia-h100-80gb"].prices,
   );
   // default to 60% unless get something better from pricing data.
@@ -377,7 +377,7 @@ async function updateGpuData(data) {
     data.accelerators["nvidia-h100-80gb"].prices,
   );
   await updateAcceleratorPricing(
-    "Nvidia Tesla H100 80GB GPU attached to Spot Preemptible VMs",
+    "Nvidia H100 80GB GPU attached to Spot Preemptible VMs",
     data.accelerators["nvidia-h100-80gb"].spot,
   );
 
@@ -396,7 +396,7 @@ async function updateGpuData(data) {
     },
   };
   await updateAcceleratorPricing(
-    "Nvidia Tesla H200 141GB GPU",
+    "H200 141GB GPU",
     data.accelerators["nvidia-h200-141gb"].prices,
   );
   // default to 60% unless get something better from pricing data.
