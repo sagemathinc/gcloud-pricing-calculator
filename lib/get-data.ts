@@ -1,8 +1,8 @@
-import { parsePricingData, machineTypeToPriceData } from "./parse-pricing";
 import { join } from "path";
 import { writeFile } from "fs/promises";
 import handEdit from "./hand-edit";
 import debug from "debug";
+import { data } from "./template";
 
 const log = debug("gcloud-info");
 
@@ -19,8 +19,6 @@ export async function getData() {
 
 export async function updateData() {
   log("parsing data");
-  const raw = await parsePricingData();
-  const data = machineTypeToPriceData(raw);
   await handEdit(data);
   await writeFile(dataPath, "exports.data=" + JSON.stringify(data));
 }

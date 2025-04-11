@@ -1,5 +1,7 @@
 # Google Cloud Pricing Info and Calculator
 
+**April 2025 update:** This library stopped scraping any of the Google HTML pages, since they all changed which breaks all the scraping. Instead, there is a file lib/template.js, which was the last successful scrape. That is used to get the machine families, etc., then updated explicitly in lib/hand-edit.ts using customer pricing (a csv file). Everything about scraping mentioned below is purely of historical interest.
+
 ---
 
 This is a node.js library that downloads and parses the website [https://cloud.google.com/compute/vm\-instance\-pricing](https://cloud.google.com/compute/vm-instance-pricing) and several other public data sources form Google, and also includes a copy of some of the official SKU pricing list, parses everything, makes a range of automatic and manual changes, then makes it possibly to very quickly use all of that data from Javascript.
@@ -11,7 +13,7 @@ Finally, it includes some by hand tables of pricing for A100's and some other ad
 _**CAVEAT: Obviously don't trust anything here.**_ I made this. I'm using it. And I made it public, though under a **non\-commercial license**. This very much comes with absolutely no guarantees! Buyer beware, literally. All that said, if you're reading this and know a better way to do something or want to improve this code, please contribute! See [https://github.com/sagemathinc/gcloud\-pricing\-calculator](https://github.com/sagemathinc/gcloud-pricing-calculator)
 Also, see [this similar project](https://github.com/Cyclenerd/google-cloud-pricing-cost-calculator/tree/master#readme).
 
-CAVEAT: Don't trust the official public google pricing pages either. They have numerous significant mistakes, where pricing is off by potentially thousands of dollars. However, the actual SKU pricing data seems to be what they actually charge. E.g., in Singapore the price per month for a `m1-ultramem-40` VM with 961GB of RAM [is listed here](https://cloud.google.com/compute/vm-instance-pricing) as \$10814.95, but in reality the price is \$5,411.74 \(roughly a factor of 2\). This is not a spot instance: 
+CAVEAT: Don't trust the official public google pricing pages either. They have numerous significant mistakes, where pricing is off by potentially thousands of dollars. However, the actual SKU pricing data seems to be what they actually charge. E.g., in Singapore the price per month for a `m1-ultramem-40` VM with 961GB of RAM [is listed here](https://cloud.google.com/compute/vm-instance-pricing) as \$10814.95, but in reality the price is \$5,411.74 \(roughly a factor of 2\). This is not a spot instance:
 
 ![](.README.md.upload/paste-0.7731360161162133)
 
@@ -101,8 +103,8 @@ First, **\(1\) update the csv file in the data subdirectory, then \(2\) run this
 
 There is no point in doing this unless you also update the csv file in the data subdirectory!
 
-- There is no automated way to get the csv file with data about pricing as of May 23, 2024.  I have made multiple support requests to Google about this, so maybe someday.
-- There interval between when the email about spot pricing changing goes out and prices actually change is difficult to discern.  Sometimes the email goes out days before the price is supposed to change. The last one I got was a day AFTER the change.
+- There is no automated way to get the csv file with data about pricing as of May 23, 2024. I have made multiple support requests to Google about this, so maybe someday.
+- There interval between when the email about spot pricing changing goes out and prices actually change is difficult to discern. Sometimes the email goes out days before the price is supposed to change. The last one I got was a day AFTER the change.
 
 We don't include information yet about snapshot prices yet.
 
@@ -114,9 +116,9 @@ Also, your prices can be different than the published rates, e.g., if Google has
 
 This package is AGPL + non-commercial clause licensed. If you want to use it in a product, contact us for a commercial license (help@cocalc.com).
 
-_Finally: I've never seen any indication that anybody has ever used this library besides me, so I tend to make that assumption.  If you're using this, email_ [_wstein@sagemath.com,_](mailto:wstein@sagemath.com) _so at least I might think twice before making breaking changes._
+_Finally: I've never seen any indication that anybody has ever used this library besides me, so I tend to make that assumption. If you're using this, email_ [_wstein@sagemath.com,_](mailto:wstein@sagemath.com) _so at least I might think twice before making breaking changes._
 
-_Finally: I've never seen any indication that anybody has ever used this library besides me, so I tend to make that assumption.  If you're using this, email_ [_wstein@sagemath.com,_](mailto:wstein@sagemath.com) _so at least I might think twice before making breaking changes._
+_Finally: I've never seen any indication that anybody has ever used this library besides me, so I tend to make that assumption. If you're using this, email_ [_wstein@sagemath.com,_](mailto:wstein@sagemath.com) _so at least I might think twice before making breaking changes._
 
 ## Related Official Google Pages
 
@@ -145,4 +147,3 @@ In summary:
 - From the docs, a customer of GCP could potentially be getting rates different than these published ones, because of negotiated deals.
 - I don't think the underlying accounting GCP does records how much one specific instance costs. They record aggregates over time for various types of machines, and it only appears in data a customer can look at a day or two later \(?\). E.g., I ran a dozen misc machines for tests today in a new clean project, and there is zero data so far about the cost. Of course GCP does provide pricing a day later with a powerful BigQuery interface to it.
 - Spot instances prices are updated monthly. For a single machine type, they can **vary dramatically** from one region to another. E.g., right now an n2\-standard\-2 is \$14 in us\-east4 but \$19.73 in us\-east5 \(per month\). Without code surfacing this sort of thing, I don't see how one can make a rational decision.
-
