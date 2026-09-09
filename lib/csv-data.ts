@@ -416,10 +416,13 @@ export async function getStorageAtRestPricing() {
 
   const zoneData = await getZones();
   for (const zone in zoneData) {
-    let location = toAscii(zoneData[zone].location);
+    const location = toAscii(zoneData[zone].location);
     const region = zone.slice(0, zone.lastIndexOf("-"));
+    if (regions[region] != null) {
+      continue;
+    }
     const prices = {};
-    regions[region] = prices;
+    let supported = true;
     for (const cls of ["Standard", "Nearline", "Coldline", "Archive"]) {
       // "Nearline Storage Oregon"
       const place = location.split(",")[0].trim();
@@ -439,14 +442,17 @@ export async function getStorageAtRestPricing() {
           SKUdescription = `Autoclass ${cls} Storage ${place}`;
           p = parsed[SKUdescription];
           if (p == null) {
-            console.log({ zone, data: zoneData[zone] });
-            throw Error(`missing data for zone="${zone}", cls="${cls}"`);
+            supported = false;
+            break;
           }
         }
       }
       const s = p[""];
       const cost = parseFloat(s["List price ($)"]);
       prices[cls] = cost;
+    }
+    if (supported) {
+      regions[region] = prices;
     }
   }
 

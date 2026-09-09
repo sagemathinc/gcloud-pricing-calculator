@@ -1,13 +1,14 @@
 {
   "name": "@cocalc/gcloud-pricing-calculator",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "Google Cloud Pricing Calculator",
   "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepublishOnly": "pnpm audit && pnpm build && pnpm test && echo \"require('./dist/lib').updateData()\" | node",
+    "prepublishOnly": "pnpm audit && pnpm build && pnpm test",
     "build": "rm -rf dist && pnpm exec tsc",
     "test": "node --test dist/lib/*.test.js",
+    "update-data": "pnpm build && echo \"require('./dist/lib').updateData()\" | node",
     "clean": "rm -rf dist node_modules"
   },
   "files": [
