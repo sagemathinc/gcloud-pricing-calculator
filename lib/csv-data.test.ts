@@ -2,6 +2,7 @@ import { deepStrictEqual, ok } from "node:assert";
 import { test } from "node:test";
 import { parse } from "csv-parse";
 import { csvData, getStorageAtRestPricing } from "./csv-data";
+import { getData } from "./get-data";
 
 test("csv-parse callback API remains compatible", async () => {
   const records = await new Promise((resolve, reject) => {
@@ -31,4 +32,12 @@ test("storage pricing omits Compute regions without Cloud Storage SKUs", async (
 
   ok(pricing.regions["us-central1"]);
   deepStrictEqual(pricing.regions["asia-southeast3"], undefined);
+});
+
+test("built package includes a ready-to-use pricing snapshot", async () => {
+  const pricing = await getData();
+
+  ok(Object.keys(pricing.machineTypes).length > 100);
+  ok(Object.keys(pricing.zones).length > 100);
+  ok(pricing.storage.atRest);
 });
